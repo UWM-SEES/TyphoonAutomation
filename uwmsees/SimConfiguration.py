@@ -1,7 +1,5 @@
 import math
 
-# TODO: Add a way to load/save configuration files
-
 class SimConfiguration(object):
   def __init__(self):
     
