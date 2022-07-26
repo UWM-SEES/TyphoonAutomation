@@ -1,5 +1,6 @@
 import sys
 import logging
+import argparse
 
 from datetime import datetime
 
@@ -14,9 +15,6 @@ import simulation_scenarios
 from simulation_scenarios import ExampleFaultScenario
 
 
-# Set to True to bypass device discovery and force use of Virtual HIL
-FORCE_VHIL = False
-
 # Filter available devices by serial number (set to None if not used)
 SERIAL_NUMBER_FILTER = [
   "00604-00-00188"]               # HIL-604-Top is 00604-00-00188
@@ -26,8 +24,8 @@ SCENARIO_REPETITION_COUNT = 20    # Number of times to run each scenario
 CAPTURE_STOP_TIMEOUT = 10.0       # Wall time in seconds to wait for capture data transfer to stop
 PERIODIC_UPDATE_INTERVAL = 20.0   # Wall time inverval in seconds between periodic updates
 
-HIL_LOGGER_NAME = "HIL_LOGGER"          # Logger name
-LOGGER_FILENAME = "./output/log.txt"    # Logger file name
+HIL_LOGGER_NAME = "HIL_LOGGER"    # Logger name
+HIL_LOGGING_FORMAT = "%(levelname)s - %(asctime)s - %(message)s"    # Log message format
 
 
 # TODO list:
@@ -37,10 +35,10 @@ LOGGER_FILENAME = "./output/log.txt"    # Logger file name
 # Consider using a builder pattern to instantiate the model manager
 # Allow the user to set the capture file path (perhaps in the simulation configuration)
 # Allow the user to adjust the number of scenario repetitions (perhaps in the simulation configuration)
+# Add a way to load/save simulation configuration files
 # Add a way to stream captured data out of the simulation run (e.g. for prototyping digital twins)
 # And eventually... separate the simulation code into its own Python package
 
-SIMULATION_TIMESTEP = 2e-6        # Model timestep in seconds
 SAMPLE_FREQUENCY = 3.84e3         # Capture sampling frequency in Hz
 
 # Names of analog signals to capture
@@ -66,22 +64,104 @@ ANALOG_CAPTURE_CHANNELS = [
 # Names of digital signals to capture
 DIGITAL_CAPTURE_CHANNELS = []
 
-  
-# Configure logging
-logger = logging.getLogger(HIL_LOGGER_NAME)
-logger_formatter = logging.Formatter("%(levelname)s - %(asctime)s - %(message)s")
 
+# Configure logger and log format
+logger = logging.getLogger(HIL_LOGGER_NAME)
+logger_formatter = logging.Formatter(HIL_LOGGING_FORMAT)
+
+# Configure console logger
 logger_console = logging.StreamHandler()
 logger_console.setFormatter(logger_formatter)
 logger.addHandler(logger_console)
 
-logger_file = logging.FileHandler(filename = LOGGER_FILENAME, mode = "w")
-logger_file.setFormatter(logger_formatter)
-logger.addHandler(logger_file)
 
+# Parse command line arguments
+model_name = None
+log_filename = None
+schematic_filename = None
+compiled_model_filename = None
+compile_model_argument = None
+force_vhil = False
+
+try:
+  parser = argparse.ArgumentParser(
+    description = "Typhoon Automation - Automate Typhoon HIL simulations")
+  
+  parser.add_argument(    # Model name is the only non-switch argument
+    "model_name",
+    help = "Name of model, used for default filenames",
+    type = str)
+  
+  parser.add_argument(    # Ex: --log_filename "log.txt"
+    "--log_filename",
+    help = "Filename for logging, defaults to './log.txt' if not provided",
+    type = str,
+    default = "./log.txt")
+
+  parser.add_argument(    # Ex: --schematic_filename "./models/example.tse"
+    "--schematic_filename",
+    help = "Path to Typhoon schematic filename, overrides default if provided",
+    type = str)
+
+  parser.add_argument(    # Ex: --compiled_filename "./models/example.cpd"
+    "--compiled_filename",
+    help = "Path to Typhoon compiled model filename, overrides default if provided",
+    type = str)
+
+  parser.add_argument(    # Ex: --compile Conditional
+    "--compile",
+    help = "Compile schematic after loading",
+    type = str,
+    choices = ["Yes", "No", "Conditional"],
+    default = "Conditional")
+  
+  parser.add_argument(
+    "--force_vhil",
+    help = "Skip device discovery and force the use of Virtual HIL",
+    action = "store_true")
+  
+  # Parse and check arguments
+  args = parser.parse_args()
+
+  model_name = args.model_name
+  if not args.model_name:
+    raise RuntimeError(f"Invalid model name ({args.model_name})")
+  
+  log_filename = args.log_filename
+  if not args.model_name:
+    raise RuntimeError(f"Invalid log file name ({args.log_filename})")
+  
+  schematic_filename = args.schematic_filename
+  compiled_model_filename = args.compiled_filename
+  compile_model_argument = args.compile
+  force_vhil = args.force_vhil
+  
+except BaseException as ex:
+  logger.critical("Failed to parse command line arguments")
+  logger.exception(ex)
+  sys.exit(-1)
+  
+# Configure file logger
+try:
+  logger_file = logging.FileHandler(filename = log_filename, mode = "w")
+  logger_file.setFormatter(logger_formatter)
+  logger.addHandler(logger_file)
+except BaseException as ex:
+  logger.critical("Failed configure log file")
+  logger.exception(ex)
+  sys.exit(-1)
+  
+# Set log level  
 logger.setLevel(level = logging.DEBUG)
 
-  
+# Program exit code
+exit_code = -1
+
+# Objects which need special handling (e.g. resource cleanup)
+hil_setup: HilSetupManager = None
+sim_runner: SimRunner = None
+
+
 ### Main try block ###
 try:
   startup_time = datetime.now()
@@ -90,11 +170,11 @@ try:
   # Set up HIL
   hil_setup = HilSetupManager(logger = logger)
   
-  if FORCE_VHIL:
-    # If requested, skip device setup and force use of VHIL
+  # If requested, skip device setup and force use of VHIL
+  if force_vhil:
+    logger.info("Forcing use of VHIL")
     using_vhil = True
-    devices = []
-    
+    devices = []  
   else:
     # Find available devices and include them in the setup
     devices = hil_setup.get_available_devices(SERIAL_NUMBER_FILTER)
@@ -103,24 +183,44 @@ try:
       # Default to VHIL if no devices are found
       logger.warning("No available devices found, using VHIL")
       using_vhil = True
-      
     else:
       logger.info(f"Found {len(devices)} devices")
       hil_setup.connect_available_devices(devices)
       using_vhil = False
 
-  # Load model
-  model_manager = ModelManager(logger = logger)
+  # Load schematic
+  logger.info(f"Using model name {model_name}")
+  model_manager = ModelManager(
+    model_name = model_name,
+    logger = logger)
   
-  # TODO: Make path naming more graceful
-  model_name = "ringbus-f01"
-  model_filename = f"./local/models/ringbus/{model_name} Target files/{model_name}.cpd"
+  if schematic_filename is not None:
+    model_manager.load_schematic(filename = schematic_filename)
+  else:
+    model_manager.load_schematic()
   
-  model_manager.load_model(model_filename, use_vhil = using_vhil)
+  # Compile model if needed
+  if compiled_model_filename is None:
+    if compile_model_argument == "No":
+      logger.info("Not compiling schematic")
+    else:
+      compile_schematic = compile_model_argument == "Conditional"
+      model_manager.compile_schematic(conditional_compile = compile_schematic)
+  else:
+    logger.info(f"Skipping compile, using compiled model file {compiled_model_filename}")
+  
+  
+  # Load compiled model
+  if compiled_model_filename is None:
+    compiled_model_filename = model_manager.get_compiled_model_filename()
+    
+  model_manager.load_model(
+    use_vhil = using_vhil,
+    filename = compiled_model_filename)
   
   # Configuration simulation
   sim_config = SimConfiguration()
-  sim_config.set_model_timestep(SIMULATION_TIMESTEP)
+  sim_config.set_model_timestep(model_manager.get_model_timestep())
   sim_config.set_sample_frequency(SAMPLE_FREQUENCY)
   sim_config.set_capture_stop_timeout(CAPTURE_STOP_TIMEOUT)
   sim_config.add_analog_capture(ANALOG_CAPTURE_CHANNELS)
@@ -164,16 +264,48 @@ try:
   shutdown_time = datetime.now()
   logger.info(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
   
+  # Done
+  exit_code = 0
   
+
+# Catch keyboard interrupt
+except KeyboardInterrupt:
+  logger.warning("*** Keyboard interrupt ***")
+  
+  # Try to stop simulation
+  try:
+    if (sim_runner is not None) and (sim_runner.is_simulation_running()):
+      sim_runner.stop_simulation()
+  except BaseException as ex:
+    logger.critical("Failed to stop simulation")
+    logger.exception(ex)
+  
+  # Try to disconnect HIL
+  try:
+    if (hil_setup is not None) and (hil_setup.is_connected()):
+      hil_setup.disconnect()
+  except BaseException as ex:
+    logger.critical("Failed to disconnect HIL setup")
+    logger.exception(ex)
+  
+  exit_code = -1
+    
 # Catch-all exception block    
 except BaseException as ex:
   logger.exception(ex)
-  
+  exit_code = -1
 
 # Clean up and shut down
 finally:
-  sys.stderr.flush()
-  sys.stdout.flush()
+  del sim_runner
+  del hil_setup
+
+  logger_file.close()  
+  logger_console.close()
+  
   logger_file.flush()
   logger_console.flush()
-  # TODO: Flush anything else, free resources, etc.
+  
+  sys.stderr.flush()
+  sys.stdout.flush()
+  sys.exit(exit_code)
