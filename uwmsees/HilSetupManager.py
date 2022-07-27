@@ -64,7 +64,7 @@ class HilSetupManager(object):
   :return List of devices used in the setup
   :rtype list
   """
-  def connect_available_devices(self, devices = None) -> bool:
+  def connect_available_devices(self, devices = None) -> list:
     try:
       # Disconnect any currently connected setup
       if self.is_connected():
