@@ -152,10 +152,10 @@ class ModelManager(object):
   :rtype float
   """
   def get_model_timestep(self) -> float:
-    if self.model_timestep is None:
+    try:
+      return float(self.model_timestep)
+    except (ValueError, TypeError):
       raise ValueError("Invalid model timestep")
-    
-    return float(self.model_timestep)
   
   
   """
