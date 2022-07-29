@@ -1,15 +1,7 @@
 import sys
 import logging
-import argparse
 
-from datetime import datetime
-
-from uwmsees.HilSetupManager import HilSetupManager
-from uwmsees.ModelManager import ModelManager
-from uwmsees.SimConfiguration import SimConfiguration
-from uwmsees.SimRunner import SimRunner
-from uwmsees.SimSchedule import SimSchedule
-from uwmsees.SimOrchestrator import SimOrchestrator
+from uwmsees.TyphoonAutomator import TyphoonAutomator
 
 import simulation_scenarios
 from simulation_scenarios import ExampleFaultScenario
@@ -21,18 +13,14 @@ SERIAL_NUMBER_FILTER = [
 
 SCENARIO_REPETITION_COUNT = 20    # Number of times to run each scenario
 
-CAPTURE_STOP_TIMEOUT = 10.0       # Wall time in seconds to wait for capture data transfer to stop
-PERIODIC_UPDATE_INTERVAL = 20.0   # Wall time inverval in seconds between periodic updates
-
+HIL_LOGGING_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"    # Log message format
 HIL_LOGGER_NAME = "HIL_LOGGER"    # Logger name
-HIL_LOGGING_FORMAT = "%(levelname)s - %(asctime)s - %(message)s"    # Log message format
-
+HIL_LOG_FILENAME = "./log.txt"    # Logging filename
+HIL_LOG_LEVEL = logging.DEBUG     # Lowest severity level to log
 
 # TODO list:
-# Read the simulation timestep from the model
 # Set the sample frequency elsewhere (perhaps the model manager)
 # Set the analog/digital capture channels elsewhere (perhaps the model manager)
-# Consider using a builder pattern to instantiate the model manager
 # Allow the user to set the capture file path (perhaps in the simulation configuration)
 # Allow the user to adjust the number of scenario repetitions (perhaps in the simulation configuration)
 # Add a way to load/save simulation configuration files
@@ -65,205 +53,56 @@ ANALOG_CAPTURE_CHANNELS = [
 DIGITAL_CAPTURE_CHANNELS = []
 
 
-# Configure logger and log format
+# Create logger
 logger = logging.getLogger(HIL_LOGGER_NAME)
 logger_formatter = logging.Formatter(HIL_LOGGING_FORMAT)
 
-# Configure console logger
+# Add console handler
 logger_console = logging.StreamHandler()
 logger_console.setFormatter(logger_formatter)
 logger.addHandler(logger_console)
 
+# Add log file handler
+logger_file = logging.FileHandler(filename = HIL_LOG_FILENAME, mode = "w")
+logger_file.setFormatter(logger_formatter)
+logger.addHandler(logger_file)
 
-# Parse command line arguments
-model_name = None
-log_filename = None
-schematic_filename = None
-compiled_model_filename = None
-compile_model_argument = None
-force_vhil = False
-
-try:
-  parser = argparse.ArgumentParser(
-    description = "Typhoon Automation - Automate Typhoon HIL simulations")
-  
-  parser.add_argument(    # Model name is the only non-switch argument
-    "model_name",
-    help = "Name of model, used for default filenames",
-    type = str)
-  
-  parser.add_argument(    # Ex: --log_filename "log.txt"
-    "--log_filename",
-    help = "Filename for logging, defaults to './log.txt' if not provided",
-    type = str,
-    default = "./log.txt")
-
-  parser.add_argument(    # Ex: --schematic_filename "./models/example.tse"
-    "--schematic_filename",
-    help = "Path to Typhoon schematic filename, overrides default if provided",
-    type = str)
-
-  parser.add_argument(    # Ex: --compiled_filename "./models/example.cpd"
-    "--compiled_filename",
-    help = "Path to Typhoon compiled model filename, overrides default if provided",
-    type = str)
-
-  parser.add_argument(    # Ex: --compile Conditional
-    "--compile",
-    help = "Compile schematic after loading",
-    type = str,
-    choices = ["Yes", "No", "Conditional"],
-    default = "Conditional")
-  
-  parser.add_argument(
-    "--force_vhil",
-    help = "Skip device discovery and force the use of Virtual HIL",
-    action = "store_true")
-  
-  # Parse and check arguments
-  args = parser.parse_args()
-
-  model_name = args.model_name
-  if not args.model_name:
-    raise RuntimeError(f"Invalid model name ({args.model_name})")
-  
-  log_filename = args.log_filename
-  if not args.model_name:
-    raise RuntimeError(f"Invalid log file name ({args.log_filename})")
-  
-  schematic_filename = args.schematic_filename
-  compiled_model_filename = args.compiled_filename
-  compile_model_argument = args.compile
-  force_vhil = args.force_vhil
-  
-except BaseException as ex:
-  logger.critical("Failed to parse command line arguments")
-  logger.exception(ex)
-  sys.exit(-1)
-  
-# Configure file logger
-try:
-  logger_file = logging.FileHandler(filename = log_filename, mode = "w")
-  logger_file.setFormatter(logger_formatter)
-  logger.addHandler(logger_file)
-except BaseException as ex:
-  logger.critical("Failed configure log file")
-  logger.exception(ex)
-  sys.exit(-1)
-  
 # Set log level  
-logger.setLevel(level = logging.DEBUG)
+logger.setLevel(HIL_LOG_LEVEL)
 
-# Program exit code
-exit_code = -1
 
-# Objects which need special handling (e.g. resource cleanup)
-hil_setup: HilSetupManager = None
-sim_runner: SimRunner = None
-
+# Automator object
+automator = None
 
 ### Main try block ###
+exit_code = -1
 try:
-  startup_time = datetime.now()
-  logger.info(f"*** Startup at {startup_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
+  # Create automator
+  automator = TyphoonAutomator(logger = logger)
   
-  # Set up HIL
-  hil_setup = HilSetupManager(logger = logger)
+  # Handle command line arguments
+  parser = automator.build_command_line_parser()
+  (args, unknown_args) = parser.parse_known_args()
+  automator.configure_from_arguments(args = args)
   
-  # If requested, skip device setup and force use of VHIL
-  if force_vhil:
-    logger.info("Forcing use of VHIL")
-    using_vhil = True
-    devices = []  
-  else:
-    # Find available devices and include them in the setup
-    devices = hil_setup.get_available_devices(SERIAL_NUMBER_FILTER)
-    
-    if len(devices) < 1:
-      # Default to VHIL if no devices are found
-      logger.warning("No available devices found, using VHIL")
-      using_vhil = True
-    else:
-      logger.info(f"Found {len(devices)} devices")
-      hil_setup.connect_available_devices(devices)
-      using_vhil = False
-
-  # Load schematic
-  logger.info(f"Using model name {model_name}")
-  model_manager = ModelManager(
-    model_name = model_name,
-    logger = logger)
-  
-  if schematic_filename is not None:
-    model_manager.load_schematic(filename = schematic_filename)
-  else:
-    model_manager.load_schematic()
-  
-  # Compile model if needed
-  if compiled_model_filename is None:
-    if compile_model_argument == "No":
-      logger.info("Not compiling schematic")
-    else:
-      compile_schematic = compile_model_argument == "Conditional"
-      model_manager.compile_schematic(conditional_compile = compile_schematic)
-  else:
-    logger.info(f"Skipping compile, using compiled model file {compiled_model_filename}")
-  
-  
-  # Load compiled model
-  if compiled_model_filename is None:
-    compiled_model_filename = model_manager.get_compiled_model_filename()
-    
-  model_manager.load_model(
-    use_vhil = using_vhil,
-    filename = compiled_model_filename)
-  
-  # Configuration simulation
-  sim_config = SimConfiguration()
-  sim_config.set_model_timestep(model_manager.get_model_timestep())
-  sim_config.set_sample_frequency(SAMPLE_FREQUENCY)
-  sim_config.set_capture_stop_timeout(CAPTURE_STOP_TIMEOUT)
-  sim_config.add_analog_capture(ANALOG_CAPTURE_CHANNELS)
-  sim_config.add_digital_capture(DIGITAL_CAPTURE_CHANNELS)
-  # Don't forget to set the capture filename and capture start/stop times before running the simulation
-  
-  # Create simulation schedule
-  sim_schedule = SimSchedule()
-  
-  # Initialize simulation runner
-  sim_runner = SimRunner(
-    config = sim_config,
-    model_manager = model_manager,
-    schedule = sim_schedule,
-    update_interval = PERIODIC_UPDATE_INTERVAL,
-    logger = logger)
-  
-  sim_orchestrator = SimOrchestrator(
-    sim_runner = sim_runner,
-    logger = logger)
+  # Initialize the automator
+  automator.set_sample_frequency(SAMPLE_FREQUENCY)
+  automator.add_analog_capture_channels(ANALOG_CAPTURE_CHANNELS)
+  automator.add_digital_capture_channels(DIGITAL_CAPTURE_CHANNELS)
+  automator.initialize()
   
   # Add a scenario for each fault type
   for fault_name in simulation_scenarios.FAULT_MAP.keys():
-    sim_orchestrator.add_scenario(
+    automator.add_scenario(
       name = str(f"Fault-{fault_name}"),
       scenario = ExampleFaultScenario(fault_type = fault_name))
   
-  # Run all scenarios
-  start_time = datetime.now()
-  logger.info(f"Starting scenario simulations at {start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
+  # Run the automator
+  automator.run(SCENARIO_REPETITION_COUNT)
   
-  sim_orchestrator.run_all_scenarios(repetitions = SCENARIO_REPETITION_COUNT)
-  
-  stop_time = datetime.now()
-  logger.info(f"Ended scenario simulations at {stop_time.strftime('%H:%M:%S, %m/%d/%Y')}")
-  
-  # Disconnect
-  if hil_setup.is_connected():
-    hil_setup.disconnect()
-    
-  shutdown_time = datetime.now()
-  logger.info(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
-  
+  # Shut down
+  automator.shutdown()
+
   # Done
   exit_code = 0
   
@@ -271,41 +110,25 @@ try:
 # Catch keyboard interrupt
 except KeyboardInterrupt:
   logger.warning("*** Keyboard interrupt ***")
-  
-  # Try to stop simulation
-  try:
-    if (sim_runner is not None) and (sim_runner.is_simulation_running()):
-      sim_runner.stop_simulation()
-  except BaseException as ex:
-    logger.critical("Failed to stop simulation")
-    logger.exception(ex)
-  
-  # Try to disconnect HIL
-  try:
-    if (hil_setup is not None) and (hil_setup.is_connected()):
-      hil_setup.disconnect()
-  except BaseException as ex:
-    logger.critical("Failed to disconnect HIL setup")
-    logger.exception(ex)
+  if automator is not None:
+    automator.shutdown()
   
   exit_code = -1
-    
-# Catch-all exception block    
+
+# Catch all other exceptions  
 except BaseException as ex:
   logger.exception(ex)
   exit_code = -1
-
+  
+  
 # Clean up and shut down
 finally:
-  del sim_runner
-  del hil_setup
+  del automator
+  
+  for handler in logger.handlers:
+    handler.close()
+    handler.flush()
 
-  logger_file.close()  
-  logger_console.close()
-  
-  logger_file.flush()
-  logger_console.flush()
-  
   sys.stderr.flush()
   sys.stdout.flush()
   sys.exit(exit_code)
