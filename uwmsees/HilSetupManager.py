@@ -20,16 +20,6 @@ class HilSetupManager(object):
         self.disconnect()
     except:
       self.logger.critical("Exception thrown in HilSetupManager destructor")
-    
-      
-  """
-  Check if a setup is currently connected
-  
-  :return True if a setup is connected, false otherwise
-  :rtype bool
-  """
-  def is_connected(self) -> bool:
-    return self.device_manager_api.is_setup_connected()
   
   
   """
@@ -138,9 +128,10 @@ class HilSetupManager(object):
 
 
   """
-  Check if the setup is connected
+  Check if a setup is currently connected
   
-  :return True if setup is connected, false otherwise
-  """      
+  :return True if a setup is connected, false otherwise
+  :rtype bool
+  """     
   def is_connected(self) -> bool:
     return self.device_manager_api.is_setup_connected()
