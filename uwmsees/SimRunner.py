@@ -79,7 +79,7 @@ class SimRunner(object):
 
     self.clear_stop_signal()    
     self.start_simulation()
-    self.late_update_time = datetime.now()
+    self.last_update_time = datetime.now()
     
     # Main simulation loop
     while self.is_simulation_running() and not self.get_stop_signal():
