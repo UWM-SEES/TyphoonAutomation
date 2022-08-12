@@ -172,6 +172,17 @@ class TyphoonAutomator(object):
   
   
   """
+  Add a list of streaming signals to be logged
+  
+  :param list signals: List of names of streaming signals to be logged
+  """
+  def add_streaming_signals(
+      self,
+      signals: list):
+    self.sim_config.add_streaming_signals(signals)
+  
+  
+  """
   BUild the command line argument parser
   
   :returns An argument parser to handle Typhoon Automator command line arguments

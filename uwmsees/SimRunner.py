@@ -32,6 +32,8 @@ class SimRunner(object):
       logger: logging.Logger = None):
     # TODO: Check parameters
     
+    self.DATA_LOGGER_NAME = "DATA_LOGGER"
+    
     self.config = config
     self.model_manager = model_manager
     self.schedule = schedule
@@ -77,7 +79,7 @@ class SimRunner(object):
     sim_start_time = self.get_simulation_time()
     self.logger.info(f"Stopping at sim time {sim_start_time + duration}")
 
-    self.clear_stop_signal()    
+    self.clear_stop_signal()
     self.start_simulation()
     self.last_update_time = datetime.now()
     
@@ -142,14 +144,15 @@ class SimRunner(object):
   Start the simulation
   """
   def start_simulation(self):
+    # Start data logger
+    self.start_data_logger()
+    
+    # Start simulation
     self.logger.info("Starting simulation")
     if self.is_simulation_running():
       raise RuntimeError("Simulation is already running")
     
     self.wall_start_time = datetime.now()
-    
-    # Start capture and simulation
-    self.start_capture()
     hil.start_simulation()
   
   
@@ -161,11 +164,8 @@ class SimRunner(object):
   def stop_simulation(
       self,
       savestate_filename: str = None):
-    # Stop capture
-    if self.capture_in_progress():
-      self.stop_capture(timeout = self.config.capture_stop_timeout)
-    else:
-      self.logger.info("Capture already stopped")
+    # Stop data logger
+    self.stop_data_logger()
       
     # Save model state if savestate_filename is provided
     if savestate_filename:
@@ -369,3 +369,33 @@ class SimRunner(object):
       if not hasattr(scenario, "teardown"):
         self.logger.error("Scenario object does not have a teardown method")
       raise
+  
+  
+  """
+  Start the data logger
+  """
+  def start_data_logger(self):
+    self.logger.info("Starting data logger")
+    
+    if not hil.add_data_logger(
+        name = self.DATA_LOGGER_NAME,
+        signals = self.config.streaming_signals,
+        data_file = self.config.streaming_filename,
+        use_suffix = False):
+      raise RuntimeError("Failed to add data logger")
+    
+    if not hil.start_data_logger(name = self.DATA_LOGGER_NAME):
+      raise RuntimeError("Failed to start data logger")
+    
+    
+  """
+  Stop the data logger
+  """
+  def stop_data_logger(self):
+    self.logger.info("Stopping data logger")
+    
+    if not hil.stop_data_logger(name = self.DATA_LOGGER_NAME):
+      self.logger.error("Failed to stop data logger")
+      
+    if not hil.remove_data_logger(name = self.DATA_LOGGER_NAME):
+      self.logger.error("Failed to remove data logger")
