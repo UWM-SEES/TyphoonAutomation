@@ -1,6 +1,5 @@
 import typhoon.api.hil as hil
 import logging
-import math
 import time
 
 from datetime import datetime
