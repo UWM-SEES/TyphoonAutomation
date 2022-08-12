@@ -90,7 +90,8 @@ class HilSetupManager(object):
         
       # Add devices and connect setup
       if len(setup_devices) < 1:
-        raise RuntimeError("No usable serial numbers found")
+        self.logger.warning("No usable serial numbers found")
+        return []
 
       self.logger.info("Adding devices to setup")
       serial_numbers = list(map(lambda e: e[1], setup_devices))
