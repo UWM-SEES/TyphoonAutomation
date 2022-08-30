@@ -124,7 +124,8 @@ class SimRunner(object):
   """
   def invoke_event(self, event: SimulationEvent):
     try:
-      self.logger.info(f"Event at {self.get_simulation_time()}: {event.message}")
+      event_time = round(self.get_simulation_time(), 6)
+      self.logger.info(f"Event at {event_time}: {event.message}")
       event.invoke(self)
       
     except AttributeError:
