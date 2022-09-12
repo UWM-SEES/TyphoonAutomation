@@ -1,7 +1,5 @@
 import math
 
-# TODO: Add a way to load/save configuration files
-
 class SimConfiguration(object):
   def __init__(self):
     
@@ -14,6 +12,9 @@ class SimConfiguration(object):
     self.capture_duration = 0.0
     self.capture_filename = ""
     self.capture_stop_timeout = 0.0
+    
+    self.streaming_signals = []
+    self.streaming_filename = ""
       
       
   """
@@ -85,6 +86,25 @@ class SimConfiguration(object):
   """
   def clear_digital_capture(self):
     self.digital_capture_signals = []
+
+  
+  """
+  Add a list of streaming signals to be logged
+  
+  :param list signals: List of names of streaming signals to be logged
+  """ 
+  def add_streaming_signals(
+      self,
+      signals: list):
+    if signals is not None:
+      self.streaming_signals.extend(signals)
+  
+  
+  """
+  Clear the streaming signals list
+  """
+  def clear_streaming_signals(self):
+    self.streaming_signals = []
       
       
   """
@@ -175,3 +195,18 @@ class SimConfiguration(object):
       raise ValueError(f"Invalid capture stop timeout ({timeout})")
     
     self.capture_stop_timeout = timeout
+    
+    
+  """
+  Set the streaming log file name
+
+  :param str filename: Full path to streaming log file
+  :raises ValueError: The file name is invalid
+  """
+  def set_streaming_filename(
+      self,
+      filename: str):
+    if not filename:
+      raise ValueError(f"Invalid streaming log filename ({filename})")
+    
+    self.streaming_filename = filename

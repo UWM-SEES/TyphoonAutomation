@@ -20,16 +20,6 @@ class HilSetupManager(object):
         self.disconnect()
     except:
       self.logger.critical("Exception thrown in HilSetupManager destructor")
-    
-      
-  """
-  Check if a setup is currently connected
-  
-  :return True if a setup is connected, false otherwise
-  :rtype bool
-  """
-  def is_connected(self) -> bool:
-    return self.device_manager_api.is_setup_connected()
   
   
   """
@@ -64,7 +54,7 @@ class HilSetupManager(object):
   :return List of devices used in the setup
   :rtype list
   """
-  def connect_available_devices(self, devices = None) -> bool:
+  def connect_available_devices(self, devices = None) -> list:
     try:
       # Disconnect any currently connected setup
       if self.is_connected():
@@ -100,7 +90,8 @@ class HilSetupManager(object):
         
       # Add devices and connect setup
       if len(setup_devices) < 1:
-        raise RuntimeError("No usable serial numbers found")
+        self.logger.warning("No usable serial numbers found")
+        return []
 
       self.logger.info("Adding devices to setup")
       serial_numbers = list(map(lambda e: e[1], setup_devices))
@@ -138,9 +129,10 @@ class HilSetupManager(object):
 
 
   """
-  Check if the setup is connected
+  Check if a setup is currently connected
   
-  :return True if setup is connected, false otherwise
-  """      
+  :return True if a setup is connected, false otherwise
+  :rtype bool
+  """     
   def is_connected(self) -> bool:
     return self.device_manager_api.is_setup_connected()

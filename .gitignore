@@ -2,6 +2,12 @@
 [Oo]utput/
 [Ll]ocal/
 
+# Ignore VS Code folder
+.vscode/
+
+# Ignore log file
+log.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

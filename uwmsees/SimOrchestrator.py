@@ -72,6 +72,8 @@ class SimOrchestrator(object):
       # Set capture filaname for this iteration
       capture_filename = generate_capture_filename(name)
       self.sim_runner.config.set_capture_filename(capture_filename)
+      streaming_filename = generate_capture_filename(name)
+      self.sim_runner.config.set_streaming_filename(streaming_filename)
       
       # Set capture times to full length of simulation
       # TODO: Consider adding capture start/stop times to the scenario
