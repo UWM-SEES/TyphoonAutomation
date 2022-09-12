@@ -1,5 +1,5 @@
 # TyphoonAutomation
-**An automation tool for [Typhoon HIL](https://www.typhoon-hil.com/) simuluations**
+**An automation tool for [Typhoon HIL](https://www.typhoon-hil.com/) simulations**
 
 Created by the [Center for Sustainable Electric Energy Systems](https://github.com/uwm-sees) at the [University of Wisconsin - Milwaukee](https://uwm.edu/).
 
