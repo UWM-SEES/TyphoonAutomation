@@ -1,0 +1,347 @@
+version = 4.2
+
+//
+// Saved by sw version: 2022.3
+//
+
+model "rlc" {
+    configuration {
+        hil_device = "HIL604"
+        hil_configuration_id = 2
+        simulation_method = exact
+        simulation_time_step = .5e-6
+        simulation_discret_scaling = 1.0
+        dsp_timer_periods = 100e-6, 50e-3
+        ss_calc_method = "systematic elimination"
+        enb_pole_shift = True
+        enb_gds_oversampling = True
+        show_modes = False
+        device_ao_limit_enable = False
+        reset_analog_outputs_on_sim_stop = True
+        reset_digital_outputs_on_sim_stop = True
+        vhil_adio_loopback = False
+        cpl_stb = False
+        enb_dep_sw_detect = False
+        code_section = "internal memory"
+        data_section = "internal memory"
+        sys_sp_rate_1 = 0.0001
+        sys_sp_rate_2 = 0.05
+        sys_real_type_precision = "default"
+        user_real_type_precision = "default"
+        sys_cpu_optimization = "high"
+        user_cpu_optimization = "high"
+        user_cpu_part_option = "default"
+        matrix_based_reduction = True
+        cpl_dynamics_analysis = False
+        export_ss_to_pickle = False
+        ground_scope_core = False
+        dss_num_tol = 1e-15
+        cce_platform = "generic"
+        cce_use_relative_names = False
+        cce_type_mapping_real = "double"
+        cce_type_mapping_uint = "unsigned int"
+        cce_type_mapping_int = "int"
+        cce_directory = ""
+        cce_custom_type_int = ""
+        cce_custom_type_uint = ""
+        cce_custom_type_real = ""
+        tunable_params = "component defined"
+        sp_compiler_type = "C compiler"
+        sig_stim = "off"
+        export_resource_list = ""
+        export_dependency_list = ""
+        export_out_file = ""
+        export_lock_top_level = True
+        export_encrypt_library = True
+        export_encrypt_resources = True
+    }
+
+    component Subsystem "My model" {
+        component pas_inductor L {
+            inductance = "I_val"
+        }
+        [
+            position = 2360, 2072
+            rotation = right
+        ]
+
+        component pas_resistor Rin {
+            resistance = "0.01"
+        }
+        [
+            position = 1816, 1904
+        ]
+
+        component pas_resistor R {
+            resistance = "R_val"
+        }
+        [
+            position = 2256, 1904
+            rotation = down
+        ]
+
+        component src_ground gnd {
+        }
+        [
+            position = 1760, 2176
+        ]
+
+        component "core/Current Measurement" Il {
+            execution_rate = "Ts"
+            sig_output = "True"
+        }
+        [
+            position = 2360, 1976
+            rotation = left
+            scale = -1, 1
+            size = 64, 32
+        ]
+
+        component src_voltage Vdc {
+            R2 = "0.1"
+            init_const_value = "5.0"
+            param_set = ""
+        }
+        [
+            position = 1760, 2024
+            rotation = right
+        ]
+
+        component "core/Voltage Measurement" Vc {
+            execution_rate = "Ts"
+            sig_output = "True"
+        }
+        [
+            position = 2080, 2016
+            rotation = right
+            scale = -1, 1
+            size = 64, 32
+        ]
+
+        component "core/Single Pole Single Throw Contactor" Sw {
+            ctrl_src = "Model"
+            execution_rate = "Ts"
+        }
+        [
+            position = 1944, 1904
+            size = 64, 32
+        ]
+
+        component src_scada_input Sw_ctrl {
+            execution_rate = "Ts"
+            unit = ""
+        }
+        [
+            position = 1856, 1816
+        ]
+
+        component gen_probe I_ind {
+            streaming_en = "True"
+        }
+        [
+            position = 2440, 1976
+        ]
+
+        component gen_probe V_cap {
+            execution_rate = "Ts"
+            streaming_en = "True"
+        }
+        [
+            position = 2000, 2016
+            scale = -1, 1
+        ]
+
+        component pas_capacitor C {
+            capacitance = "C_val"
+        }
+        [
+            position = 2160, 2016
+            rotation = right
+        ]
+
+        junction Junction6 pe
+        [
+            position = 1760, 2128
+        ]
+
+        junction Junction9 pe
+        [
+            position = 2160, 1904
+        ]
+
+        junction Junction10 pe
+        [
+            position = 2160, 2128
+        ]
+
+        junction Junction11 pe
+        [
+            position = 2080, 1904
+        ]
+
+        junction Junction12 pe
+        [
+            position = 2080, 2128
+        ]
+
+        connect Vdc.n_node Junction6 as Connection20
+        connect Vdc.p_node Rin.p_node as Connection17
+        connect gnd.node Junction6 as Connection18
+        connect Sw.a_in Rin.n_node as Connection37
+        connect Sw.ctrl_in Sw_ctrl.out as Connection39
+        connect Vc.out V_cap.in as Connection41
+        connect L.p_node Il.p_node as Connection50
+        connect I_ind.in Il.out as Connection52
+        connect R.n_node Junction9 as Connection66
+        connect C.p_node Junction9 as Connection68
+        connect C.n_node Junction10 as Connection71
+        connect L.n_node Junction10 as Connection73
+        connect R.p_node Il.n_node as Connection72
+        connect Junction9 Junction11 as Connection74
+        connect Junction11 Sw.a_out as Connection75
+        connect Vc.p_node Junction11 as Connection76
+        connect Junction6 Junction12 as Connection77
+        connect Junction12 Junction10 as Connection78
+        connect Vc.n_node Junction12 as Connection79
+    }
+
+    default {
+        gen_probe {
+            addr = "0"
+            override_signal_name = "False"
+            signal_name = ""
+            signal_type = "generic"
+            streaming_en = "False"
+            streaming_er_idx = "0"
+            execution_rate = "inherit"
+        }
+
+        pas_capacitor {
+            capacitance = "1e-6"
+            initial_voltage = "0"
+            pole_shift_ignore = "False"
+            visible = "True"
+        }
+
+        pas_inductor {
+            inductance = "1e-3"
+            initial_current = "0.0"
+            pole_shift_ignore = "False"
+            visible = "True"
+        }
+
+        pas_resistor {
+            resistance = "1"
+            param_set = ""
+        }
+
+        src_scada_input {
+            addr = "0"
+            format = "real"
+            override_signal_name = "False"
+            signal_name = ""
+            signal_type = "real"
+            min = "-1e6"
+            max = "1e6"
+            def_value = "0"
+            unit = " "
+            execution_rate = "100e-6"
+        }
+
+        src_voltage {
+            sig_input = "False"
+            type = "signal generator"
+            param_set = "1phase"
+            parent_label = ""
+            addr = "0"
+            spc_nb = "0"
+            execution_rate = "100e-6"
+            cpd_visible = "True"
+            enable_snb = "False"
+            snb_type = "R2"
+            R2 = "0.0"
+            L1 = "0.1"
+            override_signal_name = "False"
+            signal_name = ""
+            init_source_nature = "Constant"
+            init_const_value = "0.0"
+            init_rms_value = "0.0"
+            init_frequency = "50.0"
+            init_phase = "0.0"
+        }
+
+        "core/Current Measurement" {
+            bw_limit = "False"
+            frequency = "10e3"
+            comparator_enable = "False"
+            operator = "greater"
+            threshold = "0"
+            cmp_abs_value = "False"
+            feed_forward = "false"
+            sig_output = "False"
+            sig_output_filt_and_full_bw = "False"
+            execution_rate = "100e-6"
+            addr = "0"
+            nd_msr_estimation = "false"
+            dev_cpl_msr = "false"
+            host_device = "0"
+            output_to_device = "0"
+            dev_cpl_index = "0"
+            dev_cpl_var_nb = "0"
+            visible = "True"
+            override_signal_name = "False"
+            signal_name = ""
+        }
+
+        "core/Single Pole Single Throw Contactor" {
+            ctrl_src = "Digital input"
+            Sa = "1"
+            Sa_logic = "active high"
+            enable_fb_out = "False"
+            fb_out_type = "real"
+            execution_rate = "inherit"
+            initial_state = "off"
+            on_delay = "0"
+            off_delay = "0"
+            switching = "any current"
+            hide_int_meas = "False"
+        }
+
+        "core/Voltage Measurement" {
+            bw_limit = "False"
+            frequency = "10e3"
+            comparator_enable = "False"
+            operator = "greater"
+            threshold = "0"
+            cmp_abs_value = "False"
+            feed_forward = "false"
+            sig_output = "False"
+            sig_output_filt_and_full_bw = "False"
+            execution_rate = "100e-6"
+            addr = "0"
+            nd_msr_estimation = "false"
+            dev_cpl_msr = "false"
+            host_device = "0"
+            output_to_device = "0"
+            dev_cpl_index = "0"
+            dev_cpl_var_nb = "0"
+            visible = "True"
+            override_signal_name = "False"
+            signal_name = ""
+        }
+    }
+
+    CODE model_init
+        # Numpy module is imported as 'np'
+        # Scipy module is imported as 'sp'
+        # The Schematic API is imported as 'mdl'
+        # To get the model file path, use 'mdl.get_model_file_path()'
+        # To print information to the console, use info()
+        
+        Ts = 1e-4
+        
+        C_val = 5e-6
+        I_val = 1e-5
+        R_val = 0.5
+    ENDCODE
+}
