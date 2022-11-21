@@ -164,7 +164,7 @@ class TyphoonAutomator(object):
         
         :param str filename: Path to file for capture output
         """
-        raise NotImplementedError()
+        self._capture_filename = filename
 
     def add_analog_capture_signals(
             self,
@@ -195,6 +195,11 @@ class TyphoonAutomator(object):
             self,
             name: str,
             scenario):
+        """ Add a scenario to be simulated
+  
+        :param str name: Scenario name
+        :param SimScenario scenario: Scenario to be simulated
+        """
         if self._orchestrator is None:
           raise RuntimeError("Automation is not initialized")
     
@@ -218,10 +223,29 @@ class TyphoonAutomator(object):
     def run(
             self,
             use_vhil: bool = False):
+        """ Run all scenarios in the automation
+
+        :param bool use_vhil:
+        """
+        
         self._model.load_to_setup(use_vhil=use_vhil)
-        raise NotImplementedError()
+        
+        if self._orchestrator is None:
+          raise RuntimeError("Automation is not initialized")
+    
+        start_time = datetime.now()
+        self._logger.info(f"Starting scenario simulations at {start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
+    
+        self._orchestrator.run_all_scenarios()
+    
+        stop_time = datetime.now()
+        self._logger.info(f"Ended scenario simulations at {stop_time.strftime('%H:%M:%S, %m/%d/%Y')}")
+ 
 
     def shutdown(self):
+        """ Shut down and clean up
+        """
+        
         self._logger.info(f"Shutting down automation")
   
         # Stop simulation if needed
