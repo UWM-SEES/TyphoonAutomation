@@ -195,7 +195,12 @@ class TyphoonAutomator(object):
             self,
             name: str,
             scenario):
-        raise NotImplementedError()
+        if self._orchestrator is None:
+          raise RuntimeError("Automation is not initialized")
+    
+        self._orchestrator.add_scenario(
+          name = name,
+          scenario = scenario)
 
     def clear_scenarios(self):
         raise NotImplementedError()
@@ -217,4 +222,25 @@ class TyphoonAutomator(object):
         raise NotImplementedError()
 
     def shutdown(self):
-        raise NotImplementedError()
+        self._logger.info(f"Shutting down automation")
+  
+        # Stop simulation if needed
+        try:
+            if (self._simulation is not None) and (self._simulation.is_simulation_running()):
+                self._simulation.stop_simulation()
+        except:
+            self._logger.critical("Failed to stop simulation")
+            raise
+  
+        # Disconnect HIL
+        try:
+          if (self._hil_setup is not None) and (self._hil_setup.is_connected()):
+            self._hil_setup.disconnect()
+        except:
+          self._logger.critical("Failed to disconnect HIL setup")
+          raise
+    
+    # Log shutdown  
+    shutdown_time = datetime.now()
+    self._logger.info(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
+  
