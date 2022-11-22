@@ -154,7 +154,9 @@ class TyphoonAutomator(object):
         :param list[str] signals: Names of streaming signals to be logged
         :raises ValueError: The loaded schematic does not contain one or more of the signal names
         """
-        raise NotImplementedError()
+        if not signals or len(signals) == 0:
+            raise ValueError('The loaded schematic does not contain one or more of the signal names')
+        self._data_log_signals = signals[:]
 
     def clear_data_logger_signals(self):
         """ Clear the list of data logging signal names """
