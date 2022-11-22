@@ -1,3 +1,9 @@
+import typhoon.api.hil as hil
+import time
+
+from datetime import datetime
+from datetime import timedelta
+
 from typing import Any
 
 from .model import ModelManager
@@ -24,6 +30,9 @@ class Simulation(object):
         self._model = self._automator._model
         
         self._schedule = EventSchedule()
+
+        self.start_time: datetime = None
+        self.stop_time: datetime = None
 
     def initialize(
             self,
@@ -58,10 +67,29 @@ class Simulation(object):
           raise
 
     def start_simulation(self):
-        raise NotImplementedError()
+        # Start data logger
+        self.start_data_logger()
+    
+        # Start simulation
+        self._automator.log("Starting simulation")
+        if self.is_simulation_running():
+          raise RuntimeError("Simulation is already running")
+    
+        self.start_time = datetime.now()
+        hil.start_simulation()        
 
     def stop_simulation(self):
-        raise NotImplementedError()
+        # Stop data logger
+        self.stop_data_logger()
+                  
+        # Stop simulation
+        if self.is_simulation_running():
+          self._automator.log("Stopping simulation")
+          hil.stop_simulation()
+        else:
+          self_automator.log("Stop simulation called but simulation was not running", level = logger.WARNING)
+        
+        self.stop_time = datetime.now()
 
     def is_simulation_running(self) -> bool:
         raise NotImplementedError()
