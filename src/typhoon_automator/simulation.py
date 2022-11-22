@@ -92,16 +92,16 @@ class Simulation(object):
         self.stop_time = datetime.now()
 
     def is_simulation_running(self) -> bool:
-        raise NotImplementedError()
+        return hil.is_simulation_running()
 
     def get_simulation_time(self) -> float:
-        raise NotImplementedError()
+        return hil.get_sim_time()
 
     def get_simulation_step(self) -> int:
-        raise NotImplementedError()
+        return hil.get_sim_step()
 
     def start_capture(self):
-        raise NotImplementedError()
+        return hil.capture_in_progress()
 
     def stop_capture(self):
         raise NotImplementedError()
