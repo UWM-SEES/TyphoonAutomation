@@ -31,13 +31,17 @@ class Simulation(object):
         
         self._schedule = EventSchedule()
 
+        self.stop_signal = False
         self.start_time: datetime = None
         self.stop_time: datetime = None
 
     def initialize(
             self,
             scenario: Any):
-        raise NotImplementedError()
+        if scenario is None:
+            raise ValueError("Scenario cannot be None")
+
+        self.scenario = scenario
 
     def schedule_event(
             self,
@@ -117,10 +121,11 @@ class Simulation(object):
         raise NotImplementedError()
 
     def set_stop_signal(self):
-        raise NotImplementedError()
+        self._automator.log("Setting stop signal")
+        self.stop_signal = True
 
     def clear_stop_signal(self):
-        raise NotImplementedError()
+        self.stop_signal = False
 
     def get_stop_signal(self) -> bool:
-        raise NotImplementedError()
+        return self.stop_signal
