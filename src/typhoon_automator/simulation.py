@@ -131,7 +131,6 @@ class Simulation(object):
     :return True if capture is in progress, false otherwise
     :rtype bool
     """
-        # TODO: Return type is missing from class diagram
         return hil.capture_in_progress()
 
     def start_data_logger(self):
