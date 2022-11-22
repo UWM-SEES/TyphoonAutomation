@@ -164,6 +164,8 @@ class TyphoonAutomator(object):
         
         :param str filename: Path to file for capture output
         """
+        if not filename:
+            raise ValueError('Capture filename cannot be empty')  
         self._capture_filename = filename
 
     def add_analog_capture_signals(
@@ -227,33 +229,32 @@ class TyphoonAutomator(object):
 
         :param bool use_vhil:
         """
+        if self._orchestrator is None:
+            raise RuntimeError("Automation is not initialized")
         
         self._model.load_to_setup(use_vhil=use_vhil)
-        
-        if self._orchestrator is None:
-          raise RuntimeError("Automation is not initialized")
     
         start_time = datetime.now()
-        self._logger.info(f"Starting scenario simulations at {start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
+        self.log(f"Starting scenario simulations at {start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
     
-        self._orchestrator.run_all_scenarios()
+        self._orchestrator.run()
     
         stop_time = datetime.now()
-        self._logger.info(f"Ended scenario simulations at {stop_time.strftime('%H:%M:%S, %m/%d/%Y')}")
+        self.log(f"Ended scenario simulations at {stop_time.strftime('%H:%M:%S, %m/%d/%Y')}")
  
 
     def shutdown(self):
         """ Shut down and clean up
         """
         
-        self._logger.info(f"Shutting down automation")
+        self.log(f"Shutting down automation")
   
         # Stop simulation if needed
         try:
             if (self._simulation is not None) and (self._simulation.is_simulation_running()):
                 self._simulation.stop_simulation()
         except:
-            self._logger.critical("Failed to stop simulation")
+            self.log("Failed to stop simulation", level = logging.CRITICAL)
             raise
   
         # Disconnect HIL
@@ -261,10 +262,10 @@ class TyphoonAutomator(object):
           if (self._hil_setup is not None) and (self._hil_setup.is_connected()):
             self._hil_setup.disconnect()
         except:
-          self._logger.critical("Failed to disconnect HIL setup")
+          self.log("Failed to disconnect HIL setup", level = logging.CRITICAL)
           raise
     
     # Log shutdown  
     shutdown_time = datetime.now()
-    self._logger.info(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
+    self.log(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
   
