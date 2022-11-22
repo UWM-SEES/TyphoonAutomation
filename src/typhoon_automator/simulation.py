@@ -39,7 +39,23 @@ class Simulation(object):
     def invoke_event(
             self,
             event: Any):
-        raise NotImplementedError()
+        if event is None:
+            raise ValueError("Event cannot be None")
+        try:
+            event_time = round(self.get_simulation_time(), 6)
+            self._automator.log(f"Event at {event_time}: {event.message}")
+            event.invoke(self)
+      
+        except AttributeError:
+          if not hasattr(event, "invoke"):
+            self._automator.log("Event object does not have an invoke method", level = logging.ERROR) # is this the right level?
+          elif not hasattr(event, "message"):
+            self._automator.log("Event object does not have a message", level = logging.ERROR)
+        
+        except BaseException as ex:
+          self._automator.log("Event invocation failed", level = logging.ERROR)
+          self._automator.log_exception(ex)
+          raise
 
     def start_simulation(self):
         raise NotImplementedError()
