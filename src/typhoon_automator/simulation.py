@@ -96,36 +96,68 @@ class Simulation(object):
         self.stop_time = datetime.now()
 
     def is_simulation_running(self) -> bool:
+    """ Check if the simulation is running
+
+    :return True if simulation is running, false otherwise
+    :rtype bool
+    """
         return hil.is_simulation_running()
 
     def get_simulation_time(self) -> float:
+    """ Get the current simulation time
+
+    :return Simulation time
+    :rtype float
+    """
         return hil.get_sim_time()
 
     def get_simulation_step(self) -> int:
+    """ Get the current simulation step
+      
+    :return Simulation step
+    :rtype int
+    """
         return hil.get_sim_step()
 
     def start_capture(self):
-        return hil.capture_in_progress()
+        raise NotImplementedError()
 
     def stop_capture(self):
         raise NotImplementedError()
 
     def is_capture_in_progress(self) -> bool:
+    """ Check if capture is in progress
+
+    :return True if capture is in progress, false otherwise
+    :rtype bool
+    """
         # TODO: Return type is missing from class diagram
-        raise NotImplementedError()
+        return hil.capture_in_progress()
 
     def start_data_logger(self):
+    """ Start the data logger
+    """
         raise NotImplementedError()
 
     def stop_data_logger(self):
+    """ Stop the data logger
+    """
         raise NotImplementedError()
 
     def set_stop_signal(self):
+    """ Set the simulation stop signal
+    """
         self._automator.log("Setting stop signal")
         self.stop_signal = True
 
     def clear_stop_signal(self):
+    """ Clear the simulation stop signal
+    """
         self.stop_signal = False
 
     def get_stop_signal(self) -> bool:
+    """ Get the state of the simulation stop signal
+
+    :return State of the stop signal (True for stop, False otherwise)
+    """
         return self.stop_signal
