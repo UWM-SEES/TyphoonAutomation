@@ -265,7 +265,7 @@ class TyphoonAutomator(object):
           self.log("Failed to disconnect HIL setup", level = logging.CRITICAL)
           raise
     
-    # Log shutdown  
-    shutdown_time = datetime.now()
-    self.log(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
-  
+        # Log shutdown  
+        shutdown_time = datetime.now()
+        self.log(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
+      
