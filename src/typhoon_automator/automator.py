@@ -141,7 +141,10 @@ class TyphoonAutomator(object):
         
         :param str filename: Path to file for data logging output
         """
-        raise NotImplementedError()
+        if not filename:
+            raise ValueError('Data log filename cannot be empty')  
+        self._data_log_filename = filename
+        
 
     def add_data_logger_signals(
             self,
