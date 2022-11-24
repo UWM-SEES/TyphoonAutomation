@@ -53,6 +53,10 @@ class Simulation(object):
     def invoke_event(
             self,
             event: Any):
+    """ Invoke an event
+
+    :param event: Event to be invoked
+    """
         if event is None:
             raise ValueError("Event cannot be None")
         try:
@@ -72,6 +76,8 @@ class Simulation(object):
           raise
 
     def start_simulation(self):
+    """ Start the simulation
+    """
         # Start data logger
         self.start_data_logger()
     
@@ -84,6 +90,8 @@ class Simulation(object):
         hil.start_simulation()        
 
     def stop_simulation(self):
+    """ Stop the simulation
+    """
         # Stop data logger
         self.stop_data_logger()
                   
