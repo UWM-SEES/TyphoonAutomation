@@ -48,14 +48,19 @@ class Simulation(object):
             self,
             sim_time: float,
             event: Any):
-        raise NotImplementedError()
+    """ Schedule an event to be invoked at a given simulation time
+
+    :param float simulation_time: Simulation time at which to schedule the event
+    :param SimulationEvent event: Simulation event to be invoked at the given time
+    """
+        return self._schedule.add_event(sim_time, event)
 
     def invoke_event(
             self,
             event: Any):
     """ Invoke an event
 
-    :param event: Event to be invoked
+    :param SimulationEvent event: Event to be invoked
     """
         if event is None:
             raise ValueError("Event cannot be None")
