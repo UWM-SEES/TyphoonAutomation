@@ -31,13 +31,14 @@ class Simulation(object):
         
         self._schedule = EventSchedule()
 
-        self.stop_signal = False
-        self.start_time: datetime = None
-        self.stop_time: datetime = None
+        self._stop_signal = False
+        self._start_time: datetime = None
+        self._stop_time: datetime = None
 
     def initialize(
             self,
             scenario: Any):
+        # TODO: Orchestrator owns scenarios, Simulation initializes them-- make changes
         if scenario is None:
             raise ValueError("Scenario cannot be None")
 
@@ -79,7 +80,7 @@ class Simulation(object):
         if self.is_simulation_running():
           raise RuntimeError("Simulation is already running")
     
-        self.start_time = datetime.now()
+        self._start_time = datetime.now()
         hil.start_simulation()        
 
     def stop_simulation(self):
@@ -91,9 +92,9 @@ class Simulation(object):
           self._automator.log("Stopping simulation")
           hil.stop_simulation()
         else:
-          self_automator.log("Stop simulation called but simulation was not running", level = logger.WARNING)
+          self._automator.log("Stop simulation called but simulation was not running", level = logger.WARNING)
         
-        self.stop_time = datetime.now()
+        self._stop_time = datetime.now()
 
     def is_simulation_running(self) -> bool:
     """ Check if the simulation is running
@@ -147,16 +148,16 @@ class Simulation(object):
     """ Set the simulation stop signal
     """
         self._automator.log("Setting stop signal")
-        self.stop_signal = True
+        self._stop_signal = True
 
     def clear_stop_signal(self):
     """ Clear the simulation stop signal
     """
-        self.stop_signal = False
+        self._stop_signal = False
 
     def get_stop_signal(self) -> bool:
     """ Get the state of the simulation stop signal
 
     :return State of the stop signal (True for stop, False otherwise)
     """
-        return self.stop_signal
+        return self._stop_signal
