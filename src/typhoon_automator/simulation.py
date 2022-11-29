@@ -134,6 +134,10 @@ class Simulation(object):
         return hil.get_sim_step()
 
     def start_capture(self):
+    """ Start the data capture
+
+    :raises ValueError: A configuration value is invalid
+    """
         # Ensure configured values are acceptable
         
         # model_timestep
@@ -158,13 +162,31 @@ class Simulation(object):
         # Start capture
         # self._automator.log(f"Capturing {num_samples} samples starting at sim time {self.config.capture_start_time} to {self.config.capture_filename}")
 
-        
-        #
-        
+
+        # TODO: Clean up capture parameters, e.g. trigger and execute-at time
+##        if not hil.start_capture(
+##            cpSettings = [
+##              decimation,
+##              num_analog_channels,
+##              num_samples,
+##              capture_digital],
+##            trSettings = ["Forced"],
+##            chSettings = [
+##              self._automator._analog_capture_signals,
+##              self._automator._digital_capture_signals],
+##            dataBuffer = capture_buffer,
+##            fileName = self.config.capture_filename,
+##            executeAt = self.config.capture_start_time):  # TODO: executeAt doesn't work as expected (perhaps this isn't its correct use)
+##            raise RuntimeError("Failed to start capture")
 
         raise NotImplementedError() # NOT DONE
 
     def stop_capture(self):
+    """ Stop the data capture
+  
+    :param float timeout: Time to wait for data capture in progress to stop
+    """
+        # are we using schedule?
         raise NotImplementedError()
 
     def is_capture_in_progress(self) -> bool:
