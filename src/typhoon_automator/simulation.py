@@ -42,7 +42,7 @@ class Simulation(object):
         if scenario is None:
             raise ValueError("Scenario cannot be None")
 
-        self.scenario = scenario
+        self._automator._orchestrator.add_scenario(scenario)
 
     def schedule_event(
             self,
@@ -134,7 +134,35 @@ class Simulation(object):
         return hil.get_sim_step()
 
     def start_capture(self):
-        raise NotImplementedError()
+        # Ensure configured values are acceptable
+        
+        # model_timestep
+        if self._model._model_timestep <= 0.0:
+            raise ValueError(f"Invalid timestep ({self._model._model_timestep})")
+        # sample_frequency-- not in model.py?
+        # capture_start_time
+        # capture duration
+        if not self._automator._capture_filename:
+            raise ValueError(f"Invalid capture filename ({self._automator.capture_filename})")
+
+
+        # Initialize capture values
+        
+        num_analog_channels = len(self._automator._analog_capture_signals)
+        # num_samples = int(sample_frequency * capture_duration)
+        # decimation = int(1.0 / (self._model._model_timestep * sample_frequency))
+
+        capture_digital = len(self._automator._digital_capture_signals) > 0
+        capture_buffer = []
+        
+        # Start capture
+        # self._automator.log(f"Capturing {num_samples} samples starting at sim time {self.config.capture_start_time} to {self.config.capture_filename}")
+
+        
+        #
+        
+
+        raise NotImplementedError() # NOT DONE
 
     def stop_capture(self):
         raise NotImplementedError()
