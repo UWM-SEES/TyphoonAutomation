@@ -31,13 +31,14 @@ class Simulation(object):
         
         self._schedule = EventSchedule()
 
-        self.stop_signal = False
-        self.start_time: datetime = None
-        self.stop_time: datetime = None
+        self._stop_signal = False
+        self._start_time: datetime = None
+        self._stop_time: datetime = None
 
     def initialize(
             self,
             scenario: Any):
+        # TODO: Orchestrator owns scenarios, Simulation initializes them-- make changes
         if scenario is None:
             raise ValueError("Scenario cannot be None")
 
@@ -47,11 +48,20 @@ class Simulation(object):
             self,
             sim_time: float,
             event: Any):
-        raise NotImplementedError()
+    """ Schedule an event to be invoked at a given simulation time
+
+    :param float simulation_time: Simulation time at which to schedule the event
+    :param SimulationEvent event: Simulation event to be invoked at the given time
+    """
+        return self._schedule.add_event(sim_time, event)
 
     def invoke_event(
             self,
             event: Any):
+    """ Invoke an event
+
+    :param SimulationEvent event: Event to be invoked
+    """
         if event is None:
             raise ValueError("Event cannot be None")
         try:
@@ -71,6 +81,8 @@ class Simulation(object):
           raise
 
     def start_simulation(self):
+    """ Start the simulation
+    """
         # Start data logger
         self.start_data_logger()
     
@@ -79,10 +91,12 @@ class Simulation(object):
         if self.is_simulation_running():
           raise RuntimeError("Simulation is already running")
     
-        self.start_time = datetime.now()
+        self._start_time = datetime.now()
         hil.start_simulation()        
 
     def stop_simulation(self):
+    """ Stop the simulation
+    """
         # Stop data logger
         self.stop_data_logger()
                   
@@ -91,9 +105,9 @@ class Simulation(object):
           self._automator.log("Stopping simulation")
           hil.stop_simulation()
         else:
-          self_automator.log("Stop simulation called but simulation was not running", level = logger.WARNING)
+          self._automator.log("Stop simulation called but simulation was not running", level = logger.WARNING)
         
-        self.stop_time = datetime.now()
+        self._stop_time = datetime.now()
 
     def is_simulation_running(self) -> bool:
     """ Check if the simulation is running
@@ -147,16 +161,16 @@ class Simulation(object):
     """ Set the simulation stop signal
     """
         self._automator.log("Setting stop signal")
-        self.stop_signal = True
+        self._stop_signal = True
 
     def clear_stop_signal(self):
     """ Clear the simulation stop signal
     """
-        self.stop_signal = False
+        self._stop_signal = False
 
     def get_stop_signal(self) -> bool:
     """ Get the state of the simulation stop signal
 
     :return State of the stop signal (True for stop, False otherwise)
     """
-        return self.stop_signal
+        return self._stop_signal

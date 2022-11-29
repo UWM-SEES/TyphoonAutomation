@@ -154,9 +154,9 @@ class TyphoonAutomator(object):
         :param list[str] signals: Names of streaming signals to be logged
         :raises ValueError: The loaded schematic does not contain one or more of the signal names
         """
-        if not signals or len(signals) == 0:
+        if (not signals) or (len(signals) < 1):
             raise ValueError('The loaded schematic does not contain one or more of the signal names')
-        self._data_log_signals = signals[:]
+        self._data_log_signals.append(signals)
 
     def clear_data_logger_signals(self):
         """ Clear the list of data logging signal names """
@@ -181,10 +181,10 @@ class TyphoonAutomator(object):
         :param list[str] signals: Names of analog signals to be captured
         :raises ValueError: The loaded schematic does not contain one or more of the signal names
         """
-        if not signals or len(signals) == 0:
+        if (not signals) or (len(signals) < 1):
             raise ValueError('The loaded schematic does not contain one or more of the signal names')
         
-        self._analog_capture_signals = signals[:]
+        self._analog_capture_signals.append(signals)
 
     def add_digital_capture_signals(
             self,
@@ -194,10 +194,10 @@ class TyphoonAutomator(object):
         :param list[str] signals: Names of digital signals to be captured
         :raises ValueError: The loaded schematic does not contain one or more of the signal names
         """
-        if not signals or len(signals) == 0:
+        if (not signals) or (len(signals) < 1):
             raise ValueError('The loaded schematic does not contain one or more of the signal names')
 
-        self._digital_capture_signals = signals[:]
+        self._digital_capture_signals.append(signals)
         
     def clear_capture_signals(self):
         """ Clear the list of capture signal names """
