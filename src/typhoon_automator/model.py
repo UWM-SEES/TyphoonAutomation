@@ -5,6 +5,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
+import math
+
 
 class ModelManager(object):
     """ Model manager
@@ -122,8 +124,12 @@ class ModelManager(object):
         :param float time: Simulation time to convert
         :returns Simulation step corresponding to the given time
         :rtype int
+        :raises ValueError: A configuration value is invalid
         """
-        raise NotImplementedError()
+        if math.isclose(self._model_timestep, 0.0):
+          raise ValueError(f"Invalid model timestep ({self.model_timestep})")
+    
+        return int(time / self._model_timestep)
 
     def simstep_to_simtime(
             self,
@@ -133,8 +139,12 @@ class ModelManager(object):
         :param int step: Simulation step to convert
         :returns Simulation time corresponding to the given step
         :rtype int
+        :raises ValueError: A configuration value is invalid
         """
-        raise NotImplementedError()
+        if math.isclose(self._model_timestep, 0.0):
+          raise ValueError(f"Invalid model timestep ({self.model_timestep})")
+    
+        return float(step * self._model_timestep)
 
     def save_model_state(
             self,
