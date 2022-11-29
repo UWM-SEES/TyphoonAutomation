@@ -126,9 +126,9 @@ class ModelManager(object):
         :rtype int
         :raises ValueError: A configuration value is invalid
         """
-        if math.isclose(self._model_timestep, 0.0):
-          raise ValueError(f"Invalid model timestep ({self.model_timestep})")
-    
+        if math.isclose(self._model_timestep, 0.0) or self._model_timestep > ModelManager.MAX_TIMESTEP:
+          raise ValueError(f"Invalid model timestep ({self.model_timestep})") #this is handled in load_schematic-- should I also check it here?
+        
         return int(time / self._model_timestep)
 
     def simstep_to_simtime(
@@ -141,7 +141,7 @@ class ModelManager(object):
         :rtype int
         :raises ValueError: A configuration value is invalid
         """
-        if math.isclose(self._model_timestep, 0.0):
+        if math.isclose(self._model_timestep, 0.0) or self._model_timestep > ModelManager.MAX_TIMESTEP::
           raise ValueError(f"Invalid model timestep ({self.model_timestep})")
     
         return float(step * self._model_timestep)
