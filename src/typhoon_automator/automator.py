@@ -141,7 +141,10 @@ class TyphoonAutomator(object):
         
         :param str filename: Path to file for data logging output
         """
-        raise NotImplementedError()
+        if not filename:
+            raise ValueError('Data log filename cannot be empty')  
+        self._data_log_filename = filename
+        
 
     def add_data_logger_signals(
             self,
@@ -151,7 +154,9 @@ class TyphoonAutomator(object):
         :param list[str] signals: Names of streaming signals to be logged
         :raises ValueError: The loaded schematic does not contain one or more of the signal names
         """
-        raise NotImplementedError()
+        if (not signals) or (len(signals) < 1):
+            raise ValueError('The loaded schematic does not contain one or more of the signal names')
+        self._data_log_signals.append(signals)
 
     def clear_data_logger_signals(self):
         """ Clear the list of data logging signal names """
@@ -176,7 +181,10 @@ class TyphoonAutomator(object):
         :param list[str] signals: Names of analog signals to be captured
         :raises ValueError: The loaded schematic does not contain one or more of the signal names
         """
-        raise NotImplementedError()
+        if (not signals) or (len(signals) < 1):
+            raise ValueError('The loaded schematic does not contain one or more of the signal names')
+        
+        self._analog_capture_signals.append(signals)
 
     def add_digital_capture_signals(
             self,
@@ -186,8 +194,11 @@ class TyphoonAutomator(object):
         :param list[str] signals: Names of digital signals to be captured
         :raises ValueError: The loaded schematic does not contain one or more of the signal names
         """
-        raise NotImplementedError()
+        if (not signals) or (len(signals) < 1):
+            raise ValueError('The loaded schematic does not contain one or more of the signal names')
 
+        self._digital_capture_signals.append(signals)
+        
     def clear_capture_signals(self):
         """ Clear the list of capture signal names """
         self._analog_capture_signals = []
@@ -265,7 +276,7 @@ class TyphoonAutomator(object):
           self.log("Failed to disconnect HIL setup", level = logging.CRITICAL)
           raise
     
-    # Log shutdown  
-    shutdown_time = datetime.now()
-    self.log(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
-  
+        # Log shutdown  
+        shutdown_time = datetime.now()
+        self.log(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
+      

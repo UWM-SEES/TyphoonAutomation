@@ -110,7 +110,7 @@ classDiagram
 
     +start_capture()
     +stop_capture()
-    +is_capture_in_progress()
+    +is_capture_in_progress() bool
 
     +start_data_logger()
     +stop_data_logger()

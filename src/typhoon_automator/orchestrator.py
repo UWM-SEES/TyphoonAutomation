@@ -28,7 +28,9 @@ class Orchestrator(object):
     def add_scenario(
             self,
             scenario: Any):
-        raise NotImplementedError()
+        if scenario is None:
+          raise ValueError("Scenario cannot be None")
+        self._scenarios.add(scenario)
 
     def run(self):
         raise NotImplementedError()
