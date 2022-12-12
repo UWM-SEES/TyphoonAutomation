@@ -50,20 +50,20 @@ class Simulation(object):
             self,
             sim_time: float,
             event: Any):
-    """ Schedule an event to be invoked at a given simulation time
+        """ Schedule an event to be invoked at a given simulation time
 
-    :param float simulation_time: Simulation time at which to schedule the event
-    :param SimulationEvent event: Simulation event to be invoked at the given time
-    """
+        :param float simulation_time: Simulation time at which to schedule the event
+        :param SimulationEvent event: Simulation event to be invoked at the given time
+        """
         return self._schedule.add_event(sim_time, event)
 
     def invoke_event(
             self,
             event: Any):
-    """ Invoke an event
+        """ Invoke an event
 
-    :param SimulationEvent event: Event to be invoked
-    """
+        :param SimulationEvent event: Event to be invoked
+        """
         if event is None:
             raise ValueError("Event cannot be None")
         try:
@@ -83,8 +83,8 @@ class Simulation(object):
           raise
 
     def start_simulation(self):
-    """ Start the simulation
-    """
+        """ Start the simulation
+        """
         # Start data logger
         self.start_data_logger()
     
@@ -97,8 +97,8 @@ class Simulation(object):
         hil.start_simulation()        
 
     def stop_simulation(self):
-    """ Stop the simulation
-    """
+        """ Stop the simulation
+        """
         # Stop data logger
         self.stop_data_logger()
                   
@@ -112,34 +112,34 @@ class Simulation(object):
         self._stop_time = datetime.now()
 
     def is_simulation_running(self) -> bool:
-    """ Check if the simulation is running
+        """ Check if the simulation is running
 
-    :return True if simulation is running, false otherwise
-    :rtype bool
-    """
+        :return True if simulation is running, false otherwise
+        :rtype bool
+        """
         return hil.is_simulation_running()
 
     def get_simulation_time(self) -> float:
-    """ Get the current simulation time
+        """ Get the current simulation time
 
-    :return Simulation time
-    :rtype float
-    """
+        :return Simulation time
+        :rtype float
+        """
         return hil.get_sim_time()
 
     def get_simulation_step(self) -> int:
-    """ Get the current simulation step
-      
-    :return Simulation step
-    :rtype int
-    """
+        """ Get the current simulation step
+        
+        :return Simulation step
+        :rtype int
+        """
         return hil.get_sim_step()
 
     def start_capture(self):
-    """ Start the data capture
+        """ Start the data capture
 
-    :raises ValueError: A configuration value is invalid
-    """
+        :raises ValueError: A configuration value is invalid
+        """
         # Ensure configured values are acceptable
         
         # model_timestep
@@ -184,45 +184,45 @@ class Simulation(object):
         raise NotImplementedError() # NOT DONE
 
     def stop_capture(self):
-    """ Stop the data capture
-  
-    :param float timeout: Time to wait for data capture in progress to stop
-    """
+        """ Stop the data capture
+    
+        :param float timeout: Time to wait for data capture in progress to stop
+        """
         # are we using schedule?
         raise NotImplementedError()
 
     def is_capture_in_progress(self) -> bool:
-    """ Check if capture is in progress
+        """ Check if capture is in progress
 
-    :return True if capture is in progress, false otherwise
-    :rtype bool
-    """
+        :return True if capture is in progress, false otherwise
+        :rtype bool
+        """
         return hil.capture_in_progress()
 
     def start_data_logger(self):
-    """ Start the data logger
-    """
+        """ Start the data logger
+        """
         raise NotImplementedError()
 
     def stop_data_logger(self):
-    """ Stop the data logger
-    """
+        """ Stop the data logger
+        """
         raise NotImplementedError()
 
     def set_stop_signal(self):
-    """ Set the simulation stop signal
-    """
+        """ Set the simulation stop signal
+        """
         self._automator.log("Setting stop signal")
         self._stop_signal = True
 
     def clear_stop_signal(self):
-    """ Clear the simulation stop signal
-    """
+        """ Clear the simulation stop signal
+        """
         self._stop_signal = False
 
     def get_stop_signal(self) -> bool:
-    """ Get the state of the simulation stop signal
+        """ Get the state of the simulation stop signal
 
-    :return State of the stop signal (True for stop, False otherwise)
-    """
+        :return State of the stop signal (True for stop, False otherwise)
+        """
         return self._stop_signal
