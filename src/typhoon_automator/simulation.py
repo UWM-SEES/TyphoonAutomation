@@ -1,5 +1,6 @@
 import typhoon.api.hil as hil
 import time
+import logging
 
 from datetime import datetime
 from datetime import timedelta
@@ -107,7 +108,7 @@ class Simulation(object):
           self._automator.log("Stopping simulation")
           hil.stop_simulation()
         else:
-          self._automator.log("Stop simulation called but simulation was not running", level = logger.WARNING)
+          self._automator.log("Stop simulation called but simulation was not running", level = logging.WARNING)
         
         self._stop_time = datetime.now()
 
