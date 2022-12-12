@@ -308,4 +308,4 @@ class TyphoonAutomator(object):
 
         return Simulation(
             automator = self,
-            model_manager = self._model)
+            model = self._model)
