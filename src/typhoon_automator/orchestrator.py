@@ -12,16 +12,18 @@ class Orchestrator(object):
 
     def __init__(
             self,
-            automator):
+            automator,
+            simulation: Simulation):
         from .automator import TyphoonAutomator
 
         if automator is None:
-            raise ValueError("Automator cannot be none")
+            raise ValueError("Automator cannot be None")
+
+        if simulation is None:
+            raise ValueError("Simulation cannot be None")
             
         self._automator: TyphoonAutomator = automator
-
-        # TODO: Consider creating a factory function to address this Simulation dependency
-        self._model = self._automator._simulation
+        self._model = simulation
 
         self._scenarios: list[Any] = []
 

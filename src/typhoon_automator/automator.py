@@ -1,5 +1,7 @@
 import logging
 
+from datetime import datetime
+
 from .hilsetup import HilSetupManager
 from .model import ModelManager
 from .orchestrator import Orchestrator
@@ -30,8 +32,10 @@ class TyphoonAutomator(object):
     _capture_filename: str = None               # Filename for signal capture
 
     def __init__(self):
-        self._hil_setup = HilSetupManager(self)
-        self._model = ModelManager(self)
+        self._hil_setup = self._create_hilsetup()
+        self._model = self._create_modelmanager()
+        self._simulation = self._create_simulation()
+        self._orchestrator = self._create_orchestrator()
 
     def set_automation_logger(
             self,
@@ -142,9 +146,9 @@ class TyphoonAutomator(object):
         :param str filename: Path to file for data logging output
         """
         if not filename:
-            raise ValueError('Data log filename cannot be empty')  
+            raise ValueError('Data log filename cannot be empty')
         self._data_log_filename = filename
-        
+
 
     def add_data_logger_signals(
             self,
@@ -183,7 +187,8 @@ class TyphoonAutomator(object):
         """
         if (not signals) or (len(signals) < 1):
             raise ValueError('The loaded schematic does not contain one or more of the signal names')
-        
+
+        # TODO: Compare signal list with schematic to ensure all specified signal names exist
         self._analog_capture_signals.append(signals)
 
     def add_digital_capture_signals(
@@ -196,9 +201,10 @@ class TyphoonAutomator(object):
         """
         if (not signals) or (len(signals) < 1):
             raise ValueError('The loaded schematic does not contain one or more of the signal names')
-
-        self._digital_capture_signals.append(signals)
         
+        # TODO: Compare signal list with schematic to ensure all specified signal names exist
+        self._digital_capture_signals.append(signals)
+
     def clear_capture_signals(self):
         """ Clear the list of capture signal names """
         self._analog_capture_signals = []
@@ -279,4 +285,27 @@ class TyphoonAutomator(object):
         # Log shutdown  
         shutdown_time = datetime.now()
         self.log(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
-      
+
+    def _create_hilsetup(self) -> HilSetupManager:
+        return HilSetupManager(
+            automator = self)
+
+    def _create_modelmanager(self) -> ModelManager:
+         return ModelManager(
+            automator = self)
+
+    def _create_orchestrator(self) -> Orchestrator:
+        if self._simulation is None:
+            raise RuntimeError("Automator simulation is not initialized")
+
+        return Orchestrator(
+            automator = self,
+            simulation = self._simulation)
+
+    def _create_simulation(self) -> Simulation:
+        if self._model is None:
+            raise RuntimeError("Automator model manager is not initialized")
+
+        return Simulation(
+            automator = self,
+            model_manager = self._model)

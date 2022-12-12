@@ -18,16 +18,18 @@ class Simulation(object):
 
     def __init__(
             self,
-            automator):
+            automator,
+            model: ModelManager):
         from .automator import TyphoonAutomator
 
         if automator is None:
-            raise ValueError("Automator cannot be none")
+            raise ValueError("Automator cannot be None")
+
+        if model is None:
+            raise ValueError("Model cannot be None")
             
         self._automator: TyphoonAutomator = automator
-
-        # TODO: Consider creating a factory function to address this ModelManager dependency
-        self._model = self._automator._model
+        self._model = model
         
         self._schedule = EventSchedule()
 

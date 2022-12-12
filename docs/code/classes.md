@@ -45,6 +45,11 @@ classDiagram
 
     +run(bool use_vhil)
     +shutdown()
+
+    -create_hilsetup() HilSetupManager
+    -create_modelmanager() ModelManager
+    -create_orchestrator() Orchestrator
+    -create_simulation() Simulation
   }
 
   TyphoonAutomator *-- HilSetupManager
