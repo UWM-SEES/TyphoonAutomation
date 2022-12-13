@@ -2,6 +2,8 @@ import logging
 
 from src import typhoon_automator
 
+from demo_scenario import DemoScenario as DemoScenario
+
 # Create logger
 HIL_LOGGING_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"    # Log message format
 HIL_LOGGER_NAME = "HIL_LOGGER"    # Logger name
@@ -19,26 +21,56 @@ logger.addHandler(logger_console)
 # Set log level  
 logger.setLevel(HIL_LOG_LEVEL)
 
+# Set example information
+DEMO_SCHEMATIC = "./examples/rlc.tse"
+DEMO_SIGNAL_LOG = "./output/signals.csv"
+DEMO_CAPTURE_LOG = "./output/capture.csv"
+
+
 # Set up and run automator
-automator = None
 try:
   automator = typhoon_automator.TyphoonAutomator()
   automator.set_automation_logger(logger)
 
-  automator.initialize("./examples/rlc.tse")
+  # Find available HIL devices
+  hil_devices = automator.get_available_devices()
+  use_vhil = False
+
+  # Connect to HIL devices, or specify use of Virtual HIL
+  if len(hil_devices) > 0:
+    devices = automator.connect_devices(hil_devices)
+
+    logger.info(f"Connected to {len(devices)} HIL devices:")
+    for serial_num in devices:
+      logger.info(f"  {serial_num}")
+
+  else:
+    use_vhil = True
+    logger.info("Using Virtual HIL")
+
+  # Initialize the automator with the schematic
+  automator.initialize(DEMO_SCHEMATIC, conditional_compile = True)
   
-  automator.set_data_logger_filename("./output/signals.csv")
+  # Add data logging filename and signals
+  automator.set_data_logger_filename(DEMO_SIGNAL_LOG)
   automator.add_data_logger_signals([
     "I_ind",
     "V_cap"])
   
-  automator.set_capture_filename("./output/capture.csv")
+  # Add capture filename and signals
+  automator.set_capture_filename(DEMO_CAPTURE_LOG)
   automator.add_analog_capture_signals([
     "I_ind",
     "V_cap"])
 
-  # TODO: Expand this example
+  # Add some demo scenarios
+  automator.add_scenario(name = "Demo Scenario 1", scenario = DemoScenario(1.0))
+  automator.add_scenario(name = "Demo Scenario 2", scenario = DemoScenario(2.0))
+  automator.add_scenario(name = "Demo Scenario 3", scenario = DemoScenario(3.0))
+  
+  # Run all the scenarios
+  automator.run(use_vhil = use_vhil)
   
 except BaseException as ex:
-  if automator:
-    automator.log_exception(ex)
+  logger.critical("Exiting due to exception")
+  logger.exception(ex)
