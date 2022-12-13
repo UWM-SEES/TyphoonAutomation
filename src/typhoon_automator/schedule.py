@@ -26,6 +26,10 @@ class EventSchedule(object):
     # Check event attributes
     if not hasattr(event, "invoke"):
       raise ValueError("Event does not have an invoke method")
+      
+    if not callable(event.invoke):
+      raise ValueError("Event invoke attribute is not callable")
+      
     if not hasattr(event, "message"):
       raise ValueError("Event does not have a log message")
     

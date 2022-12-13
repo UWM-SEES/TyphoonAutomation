@@ -1,6 +1,7 @@
 import logging
 
 from datetime import datetime
+from typing import Any
 
 from .hilsetup import HilSetupManager
 from .model import ModelManager
@@ -149,7 +150,6 @@ class TyphoonAutomator(object):
             raise ValueError('Data log filename cannot be empty')
         self._data_log_filename = filename
 
-
     def add_data_logger_signals(
             self,
             signals: list[str]):
@@ -249,12 +249,15 @@ class TyphoonAutomator(object):
         if self._orchestrator is None:
             raise RuntimeError("Automation is not initialized")
         
-        self._model.load_to_setup(use_vhil=use_vhil)
+        if use_vhil:
+            self.log("Using Virtual HIL", level = logging.WARNING)
+
+        self._model.load_to_setup(use_vhil = use_vhil)
     
         start_time = datetime.now()
         self.log(f"Starting scenario simulations at {start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
     
-        self._orchestrator.run()
+        self._orchestrator.run_all()
     
         stop_time = datetime.now()
         self.log(f"Ended scenario simulations at {stop_time.strftime('%H:%M:%S, %m/%d/%Y')}")
@@ -309,3 +312,30 @@ class TyphoonAutomator(object):
         return Simulation(
             automator = self,
             model = self._model)
+
+
+class Utility(object):
+    """ Utility class
+    
+    Contains helpful methods
+    """
+
+    def create_callback_event(
+            message: str,
+            callback) -> Any:
+        """ Create a generic callback event
+
+        The function to be called should take a Simulation object as the only argument
+
+        :param str message: The message to be logged when the event is invoked
+        :param callback: Function to call when invoked
+        :return An object with a 'message' string and an 'invoke(Simulation)' method
+        :rtype Any
+        """
+        class _CallbackEvent(object):
+            pass
+        
+        event = _CallbackEvent()
+        setattr(event, "message", message)
+        setattr(event, "invoke", callback)
+        return event

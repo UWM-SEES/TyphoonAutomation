@@ -22,6 +22,7 @@ class Simulation(object):
             automator,
             model: ModelManager):
         from .automator import TyphoonAutomator
+        from .automator import Utility
 
         if automator is None:
             raise ValueError("Automator cannot be None")
@@ -30,6 +31,7 @@ class Simulation(object):
             raise ValueError("Model cannot be None")
             
         self._automator: TyphoonAutomator = automator
+        self._utility = Utility
         self._model = model
         
         self._schedule = EventSchedule()
@@ -38,14 +40,112 @@ class Simulation(object):
         self._start_time: datetime = None
         self._stop_time: datetime = None
 
+        self._scenario_duration: float = 0.0
+
+        self._update_interval = 30.0
+
     def initialize(
             self,
             scenario: Any):
-        # TODO: Orchestrator owns scenarios, Simulation initializes them-- make changes
         if scenario is None:
             raise ValueError("Scenario cannot be None")
 
-        self._automator._orchestrator.add_scenario(scenario)
+        try:
+            # Reset scenario duration
+            self._scenario_duration = 0.0
+
+            # Set up scenario
+            self._automator.log("Initializing scenario")
+            scenario.set_up_scenario(self)
+
+            # Ensure valid scenario duration has been set
+            if self._scenario_duration <= 0.0:
+                raise ValueError(f"Invalid scenario duration ({self._scenario_duration})")
+
+            # Schedule stop event
+            stop_event = self._utility.create_callback_event(
+                message = "Setting stop signal", 
+                callback = Simulation.set_stop_signal)
+
+            self.schedule_event(
+                sim_time = self._scenario_duration,
+                event = stop_event)
+
+        except AttributeError:
+            if not hasattr(scenario, "set_up_scenario"):
+                self._automator.log("Scenario object does not have a set_up_scenario method", level = logging.CRITICAL)
+            raise
+
+        except BaseException as ex:
+            self._automator.log("Failed to initialize scenario", level = logging.CRITICAL)
+            self._automator.log_exception(ex)
+            raise
+
+    def finalize(
+            self,
+            scenario: Any):
+        if scenario is None:
+            raise ValueError("Scenario cannot be None")
+
+        try:
+            self._automator.log("Finalizing scenario")
+            scenario.tear_down_scenario(self)
+
+        except AttributeError:
+            if not hasattr(scenario, "tear_down_scenario"):
+                self._automator.log("Scenario object does not have a tear_down_scenario method", level = logging.CRITICAL)
+            raise
+
+        except BaseException as ex:
+            self._automator.log("Failed to finalize scenario", level = logging.CRITICAL)
+            self._automator.log_exception(ex)
+            raise
+
+    def run(self):
+        """ Run the simulation until the stop signal is set
+        """
+        self.clear_stop_signal()
+        self.start_simulation()
+
+        last_update_time = datetime.now()
+
+        # Main simulation loop
+        while not self.get_stop_signal():
+            # TODO: Check simulation health, etc.
+            # See utils.py in the Typhoon examples (probably {Typhoon install dir}/examples/tests/utilities_lib)
+            if not self.is_simulation_running():
+                raise RuntimeError("Simulation stopped running without stop signal")
+
+            # Stop simulation if schedule is empty
+            event_count = self._schedule.get_event_count()
+            if event_count <= 0:
+                self._automator.log("No more events, stopping simulation", level = logging.WARNING)
+                self.set_stop_signal()
+                break
+            
+            # Get current simulation time
+            simulation_time = self.get_simulation_time()
+
+            # Output simulation time at requested intervals
+            if (datetime.now() - last_update_time) >= timedelta(seconds = self._update_interval):
+                last_update_time = datetime.now()
+                self._automator.log(f"Sim time {simulation_time}, {event_count} events in schedule")
+                    
+            # Invoke all events scheduled up to and including the current simulation time
+            while (self._schedule.has_next_event()):
+                if self._schedule.get_next_event_time() > simulation_time:
+                    # Next event is scheduled for the future, no more events to invoke right now
+                    break
+
+                # Pop next event from schedule and invoke the event
+                event = self._schedule.pop_next_event()
+                self.invoke_event(event)
+
+        # Simulation loop is finished, stop simulation
+        self.stop_simulation()
+
+        elapsed_time = self._stop_time - self._start_time
+        self._automator.log(f"Elapsed wall time: {elapsed_time.total_seconds()} seconds")
 
     def schedule_event(
             self,
@@ -65,21 +165,25 @@ class Simulation(object):
 
         :param SimulationEvent event: Event to be invoked
         """
-        if event is None:
-            raise ValueError("Event cannot be None")
         try:
             event_time = round(self.get_simulation_time(), 6)
             self._automator.log(f"Event at {event_time}: {event.message}")
             event.invoke(self)
       
         except AttributeError:
+          if event is None:
+            self._automator.log("Event object cannot be None")
           if not hasattr(event, "invoke"):
-            self._automator.log("Event object does not have an invoke method", level = logging.ERROR) # is this the right level?
+            self._automator.log("Event object does not have an invoke method", level = logging.ERROR)
           elif not hasattr(event, "message"):
             self._automator.log("Event object does not have a message", level = logging.ERROR)
+
+        except TypeError:
+            if not callable(event.invoke):
+                self._automator.log("Event invoke attribute is not callable", level = logging.ERROR)
         
         except BaseException as ex:
-          self._automator.log("Event invocation failed", level = logging.ERROR)
+          self._automator.log("Event invocation failed", level = logging.CRITICAL)
           self._automator.log_exception(ex)
           raise
 
@@ -94,8 +198,10 @@ class Simulation(object):
         if self.is_simulation_running():
           raise RuntimeError("Simulation is already running")
     
+        hil.start_simulation()
+
         self._start_time = datetime.now()
-        hil.start_simulation()        
+        self._automator.log(f"Scenario started at {self._start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
     def stop_simulation(self):
         """ Stop the simulation
@@ -105,12 +211,19 @@ class Simulation(object):
                   
         # Stop simulation
         if self.is_simulation_running():
-          self._automator.log("Stopping simulation")
-          hil.stop_simulation()
+            self._automator.log("Stopping simulation")
+            hil.stop_simulation()
+
+            # Log message if schedule is not empty when stopping
+            event_count = self._schedule.get_event_count()
+            if event_count > 0:
+                self._automator.log(f"Stopped simulation with {event_count} events in schedule")
+
         else:
-          self._automator.log("Stop simulation called but simulation was not running", level = logging.WARNING)
+            self._automator.log("Stop simulation called but simulation was not running", level = logging.WARNING)
         
         self._stop_time = datetime.now()
+        self._automator.log(f"Scenario stopped at {self._stop_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
     def is_simulation_running(self) -> bool:
         """ Check if the simulation is running
@@ -203,12 +316,14 @@ class Simulation(object):
     def start_data_logger(self):
         """ Start the data logger
         """
-        raise NotImplementedError()
+        # TODO: Implement this function
+        self._automator.log("Simulation.start_data_logger method is not implemented", level = logging.WARNING)
 
     def stop_data_logger(self):
         """ Stop the data logger
         """
-        raise NotImplementedError()
+        # TODO: Implement this function
+        self._automator.log("Simulation.stop_data_logger method is not implemented", level = logging.WARNING)
 
     def set_stop_signal(self):
         """ Set the simulation stop signal
@@ -227,3 +342,11 @@ class Simulation(object):
         :return State of the stop signal (True for stop, False otherwise)
         """
         return self._stop_signal
+
+    def set_scenario_duration(
+            self,
+            duration: float):
+        if duration <= 0.0:
+            raise ValueError(f"Invalid scenario duration ({duration})")
+        
+        self._scenario_duration = duration
