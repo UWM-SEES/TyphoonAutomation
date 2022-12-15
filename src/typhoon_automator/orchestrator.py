@@ -71,7 +71,6 @@ class Orchestrator(object):
 
         except BaseException as ex:
             self._automator.log(f"Failed to run scenario {name}")
-            self._automator.log_exception(ex)
             raise
 
     def run_all(self):
