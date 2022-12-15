@@ -15,24 +15,24 @@ class TyphoonAutomator(object):
     Interface for automating Typhoon HIL simulations
     """
 
-    _logger: logging.Logger = None              # Logger for automation log output
-
-    _hil_setup: HilSetupManager = None          # HIL setup manager
-    _model: ModelManager = None                 # Model manager
-    _orchestrator: Orchestrator = None          # Simulation orchestrator
-    _simulation: Simulation = None              # Simulation interface
-
-    _schematic_filename: str = None             # Filename of schematic
-    _compiled_filename: str = None              # Filename of compiled model
-
-    _data_log_signals: list[str] = []           # List of signals to log
-    _data_log_filename: str = None              # Filename for signal log
-
-    _analog_capture_signals: list[str] = []     # Analog capture signal names
-    _digital_capture_signals: list[str] = []    # Digital capture signal names
-    _capture_filename: str = None               # Filename for signal capture
-
     def __init__(self):
+        self._logger: logging.Logger = None              # Logger for automation log output
+
+        self._hil_setup: HilSetupManager = None          # HIL setup manager
+        self._model: ModelManager = None                 # Model manager
+        self._orchestrator: Orchestrator = None          # Simulation orchestrator
+        self._simulation: Simulation = None              # Simulation interface
+
+        self._schematic_filename: str = None             # Filename of schematic
+        self._compiled_filename: str = None              # Filename of compiled model
+
+        self._data_log_signals: list[str] = []           # List of signals to log
+        self._data_log_filename: str = None              # Filename for signal log
+
+        self._analog_capture_signals: list[str] = []     # Analog capture signal names
+        self._digital_capture_signals: list[str] = []    # Digital capture signal names
+        self._capture_filename: str = None               # Filename for signal capture
+
         self._hil_setup = self._create_hilsetup()
         self._model = self._create_modelmanager()
         self._simulation = self._create_simulation()
