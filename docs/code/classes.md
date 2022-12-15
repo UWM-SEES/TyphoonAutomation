@@ -128,6 +128,9 @@ classDiagram
     +get_stop_signal() bool
 
     +set_scenario_duration(float duration)
+
+    +save_model_state(str filename)
+    +load_model_state(str filename)
   }
 
   Simulation *-- EventSchedule

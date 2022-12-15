@@ -70,6 +70,7 @@ class Simulation(object):
             self.schedule_event(
                 sim_time = self._scenario_duration,
                 event = stop_event)
+            self.clear_stop_signal()
 
         except AttributeError:
             if not hasattr(scenario, "set_up_scenario"):
@@ -106,6 +107,7 @@ class Simulation(object):
         """
         self.clear_stop_signal()
         self.start_simulation()
+        self._automator.log(f"Scenario started at {self._start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
         last_update_time = datetime.now()
 
@@ -143,6 +145,7 @@ class Simulation(object):
 
         # Simulation loop is finished, stop simulation
         self.stop_simulation()
+        self._automator.log(f"Scenario stopped at {self._stop_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
         elapsed_time = self._stop_time - self._start_time
         self._automator.log(f"Elapsed wall time: {elapsed_time.total_seconds()} seconds")
@@ -201,7 +204,6 @@ class Simulation(object):
         hil.start_simulation()
 
         self._start_time = datetime.now()
-        self._automator.log(f"Scenario started at {self._start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
     def stop_simulation(self):
         """ Stop the simulation
@@ -223,7 +225,6 @@ class Simulation(object):
             self._automator.log("Stop simulation called but simulation was not running", level = logging.WARNING)
         
         self._stop_time = datetime.now()
-        self._automator.log(f"Scenario stopped at {self._stop_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
     def is_simulation_running(self) -> bool:
         """ Check if the simulation is running
@@ -350,3 +351,47 @@ class Simulation(object):
             raise ValueError(f"Invalid scenario duration ({duration})")
         
         self._scenario_duration = duration
+
+    def save_model_state(
+            self,
+            filename: str):
+        if not filename:
+            raise ValueError("Filename cannot be empty")
+
+        sim_running = self.is_simulation_running()
+        self._automator.log(f"Saving model to {filename}, simulation running: {sim_running}")
+
+        if sim_running:
+            self.stop_simulation()
+
+        try:
+            self._model.save_model_state(filename)
+        except BaseException as ex:
+            self._automator.log("Failed to save model state", level = logging.CRITICAL)
+            self._automator.log_exception(ex)
+            raise
+
+        if sim_running:
+            self.start_simulation()
+
+    def load_model_state(
+            self,
+            filename: str):
+        if not filename:
+            raise ValueError("Filename cannot be empty")
+
+        sim_running = self.is_simulation_running()
+        self._automator.log(f"Loading model from {filename}, simulation running: {sim_running}")
+
+        if sim_running:
+            self.stop_simulation()
+
+        try:
+            self._model.load_model_state(filename)
+        except BaseException as ex:
+            self._automator.log("Failed to load model state", level = logging.CRITICAL)
+            self._automator.log_exception(ex)
+            raise
+
+        if sim_running:
+            self.start_simulation()
