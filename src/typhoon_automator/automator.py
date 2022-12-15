@@ -27,7 +27,7 @@ class TyphoonAutomator(object):
         self._compiled_filename: str = None              # Filename of compiled model
 
         self._data_log_signals: list[str] = []           # List of signals to log
-        self._data_log_filename: str = None              # Filename for signal log
+        self._data_log_path: str = None                  # Path for signal log
 
         self._analog_capture_signals: list[str] = []     # Analog capture signal names
         self._digital_capture_signals: list[str] = []    # Digital capture signal names
@@ -84,7 +84,7 @@ class TyphoonAutomator(object):
 
         # Reset data logging and capture
         self.clear_data_logger_signals()
-        self._data_log_filename = None
+        self._data_log_path = None
 
         self.clear_capture_signals()
         self._capture_filename = None
@@ -139,16 +139,16 @@ class TyphoonAutomator(object):
         """
         return self._hil_setup.is_connected()
 
-    def set_data_logger_filename(
+    def set_data_logger_path(
             self,
-            filename: str):
-        """ Set the file name for data logging
+            path: str):
+        """ Set the directory for data logging
         
-        :param str filename: Path to file for data logging output
+        :param str path: Path to directory for data logging output
         """
-        if not filename:
-            raise ValueError('Data log filename cannot be empty')
-        self._data_log_filename = filename
+        if not path:
+            raise ValueError('Data logging path cannot be empty')
+        self._data_log_path = path
 
     def add_data_logger_signals(
             self,
@@ -160,7 +160,7 @@ class TyphoonAutomator(object):
         """
         if (not signals) or (len(signals) < 1):
             raise ValueError('The loaded schematic does not contain one or more of the signal names')
-        self._data_log_signals.append(signals)
+        self._data_log_signals = self._data_log_signals + signals
 
     def clear_data_logger_signals(self):
         """ Clear the list of data logging signal names """
@@ -189,7 +189,7 @@ class TyphoonAutomator(object):
             raise ValueError('The loaded schematic does not contain one or more of the signal names')
 
         # TODO: Compare signal list with schematic to ensure all specified signal names exist
-        self._analog_capture_signals.append(signals)
+        self._analog_capture_signals = self._analog_capture_signals + signals
 
     def add_digital_capture_signals(
             self,
@@ -203,7 +203,7 @@ class TyphoonAutomator(object):
             raise ValueError('The loaded schematic does not contain one or more of the signal names')
         
         # TODO: Compare signal list with schematic to ensure all specified signal names exist
-        self._digital_capture_signals.append(signals)
+        self._digital_capture_signals = self._digital_capture_signals + signals
 
     def clear_capture_signals(self):
         """ Clear the list of capture signal names """
@@ -246,11 +246,15 @@ class TyphoonAutomator(object):
 
         :param bool use_vhil:
         """
-        if self._orchestrator is None:
+        if (self._orchestrator is None) or (self._model is None):
             raise RuntimeError("Automation is not initialized")
         
         if use_vhil:
             self.log("Using Virtual HIL", level = logging.WARNING)
+
+        self._orchestrator.configure_data_logging(
+            output_path = self._data_log_path,
+            signals = self._data_log_signals)
 
         self._model.load_to_setup(use_vhil = use_vhil)
     

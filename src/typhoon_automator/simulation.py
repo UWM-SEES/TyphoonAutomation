@@ -44,6 +44,11 @@ class Simulation(object):
 
         self._update_interval = 30.0
 
+        self._data_log_signals: list[str] = []
+        self._data_log_filename: str = None
+        self._data_logger_name: str = None
+
+
     def initialize(
             self,
             scenario: Any):
@@ -107,6 +112,7 @@ class Simulation(object):
         """
         self.clear_stop_signal()
         self.start_simulation()
+        self.start_data_logger()
         self._automator.log(f"Scenario started at {self._start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
         last_update_time = datetime.now()
@@ -145,6 +151,7 @@ class Simulation(object):
 
         # Simulation loop is finished, stop simulation
         self.stop_simulation()
+        self.stop_data_logger()
         self._automator.log(f"Scenario stopped at {self._stop_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
         elapsed_time = self._stop_time - self._start_time
@@ -193,9 +200,6 @@ class Simulation(object):
     def start_simulation(self):
         """ Start the simulation
         """
-        # Start data logger
-        self.start_data_logger()
-    
         # Start simulation
         self._automator.log("Starting simulation")
         if self.is_simulation_running():
@@ -208,9 +212,6 @@ class Simulation(object):
     def stop_simulation(self):
         """ Stop the simulation
         """
-        # Stop data logger
-        self.stop_data_logger()
-                  
         # Stop simulation
         if self.is_simulation_running():
             self._automator.log("Stopping simulation")
@@ -317,14 +318,36 @@ class Simulation(object):
     def start_data_logger(self):
         """ Start the data logger
         """
-        # TODO: Implement this function
-        self._automator.log("Simulation.start_data_logger method is not implemented", level = logging.WARNING)
+        if not self._data_logger_name:
+            self._automator.log("Data logging not configured, not starting", level = logging.WARNING)
+            return
+
+        self._automator.log(f"Starting data logger, file {self._data_log_filename}")
+    
+        if not hil.add_data_logger(
+                name = self._data_logger_name,
+                data_file = self._data_log_filename,
+                signals = self._data_log_signals,
+                use_suffix = False):
+            raise RuntimeError("Failed to add data logger")
+        
+        if not hil.start_data_logger(name = self._data_logger_name):
+            raise RuntimeError("Failed to start data logger")
 
     def stop_data_logger(self):
         """ Stop the data logger
         """
-        # TODO: Implement this function
-        self._automator.log("Simulation.stop_data_logger method is not implemented", level = logging.WARNING)
+        if not self._data_logger_name:
+            self._automator.log("Data logging not configured, not stopping", level = logging.WARNING)
+            return
+
+        self._automator.log("Stopping data logger")
+
+        if not hil.stop_data_logger(name = self._data_logger_name):
+            self._automator.log("Failed to stop data logger", level = logging.ERROR)
+        
+        if not hil.remove_data_logger(name = self._data_logger_name):
+            self._automator.log("Failed to remove data logger", level = logging.ERROR)
 
     def set_stop_signal(self):
         """ Set the simulation stop signal
@@ -395,3 +418,18 @@ class Simulation(object):
 
         if sim_running:
             self.start_simulation()
+
+    def configure_data_logging(
+            self,
+            signals: list[str],
+            filename: str):
+        if not filename:
+            raise ValueError("Filename cannot be empty")
+
+        if (not signals) or (len(signals) < 1):
+            raise ValueError("Signal list cannot be empty")
+
+        self._data_log_signals = signals.copy()
+        self._data_log_filename = filename
+
+        self._data_logger_name = "SimulationDataLogger"

@@ -1,4 +1,6 @@
 from typing import Any
+from pathlib import Path
+from datetime import datetime
 
 from .simulation import Simulation
 
@@ -26,6 +28,9 @@ class Orchestrator(object):
         self._simulation = simulation
 
         self._scenarios = {}
+        
+        self._data_logging_path: str = None
+        self._data_logging_signals: list[str] = []
 
     def add_scenario(
             self,
@@ -61,10 +66,18 @@ class Orchestrator(object):
         if not (name in self._scenarios):
             raise KeyError(f"Scenario {name} does not exist")
 
+        data_log_filename = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}_{name}.csv"
+        data_log_filename = str(Path(self._data_logging_path) / data_log_filename)
+
         try:
             self._automator.log(f"*** Running scenario: {name} ***")
 
             scenario = self._scenarios[name]
+
+            self._simulation.configure_data_logging(
+                signals = self._data_logging_signals,
+                filename = data_log_filename)
+
             self._simulation.initialize(scenario)
             self._simulation.run()
             self._simulation.finalize(scenario)
@@ -76,3 +89,21 @@ class Orchestrator(object):
     def run_all(self):
         for name in self._scenarios.keys():
             self.run_scenario(name)
+
+    def configure_data_logging(
+            self,
+            output_path: str,
+            signals: list[str]):
+        if not output_path:
+            raise ValueError("Logging output path cannot be empty")
+
+        if (not signals) or (len(signals) < 1):
+            raise ValueError("Signal list cannot be empty")
+
+        # Create output path if it doesn't exist
+        path = Path(output_path)
+        if not path.exists():
+            path.mkdir(parents = True, exist_ok = True)
+        
+        self._data_logging_path = output_path
+        self._data_logging_signals = signals
