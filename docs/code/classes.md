@@ -29,7 +29,7 @@ classDiagram
     +disconnect()
     +is_connected() bool
 
-    +set_data_logger_filename(str filename)
+    +set_data_logger_path(str path)
     +add_data_logger_signals(list~str~ signals)
     +clear_data_logger_signals()
 
@@ -92,6 +92,8 @@ classDiagram
     +add_scenario(Scenario scenario)
     +run_scenario(str name)
     +run_all()
+
+    +configure_data_logging(str output_path, list~str~ signals)
   }
 
   Orchestrator -- Simulation
@@ -131,6 +133,8 @@ classDiagram
 
     +save_model_state(str filename)
     +load_model_state(str filename)
+
+    +configure_data_logging(list~str~ signals, str filename)
   }
 
   Simulation *-- EventSchedule
