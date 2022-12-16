@@ -185,7 +185,8 @@ class ModelManager(object):
             self,
             name: str,
             value: Any):
-        raise NotImplementedError()
+        if not hil.set_scada_input_value(scadaInputName = name, value = value):
+            raise RuntimeError(f"Failed to set SCADA input {name} to value {value}")
 
     def set_model_variable(
             self,
