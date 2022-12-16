@@ -68,7 +68,7 @@ class ModelManager(object):
         self._automator.log(f"Model timestep is {timestep}")
 
         self._schematic_filename = filename
-        self._model_timestep = float(timestep)
+        self._model_timestep = timestep
 
     def compile(
             self,
@@ -145,6 +145,14 @@ class ModelManager(object):
           raise ValueError(f"Invalid model timestep ({self._model_timestep})")
     
         return float(step * self._model_timestep)
+
+    def get_model_timestep(self) -> float:
+        """ Get the model timestep
+
+        :returns Model timestep
+        :rtype float
+        """
+        return self._model_timestep
 
     def save_model_state(
             self,

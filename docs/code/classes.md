@@ -70,6 +70,8 @@ classDiagram
     +simtime_to_simstep(float time) int
     +simstep_to_simtime(int step) float
 
+    +get_model_timestep() float
+
     +save_model_state(str filename)
     +load_model_state(str filename)
 
