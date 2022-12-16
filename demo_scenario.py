@@ -3,31 +3,56 @@ import random
 
 # Create an example scenario
 class DemoScenario(object):
-  def __init__(
-      self,
-      duration: float):
-    self._duration = duration
+    SCADA_SWITCH_NAME = "Sw_ctrl"
 
-  def print_message(simulation: typhoon_automator.Simulation):
-    print(f"Example message at simulation step {simulation.get_simulation_step()}")
+    def __init__(
+            self,
+            duration: float):
+        self._duration = duration
 
-  def set_up_scenario(
-      self,
-      simulation: typhoon_automator.Simulation):
-    """ Set up the demo scenaro
-    """
+    def close_switch(simulation: typhoon_automator.Simulation):
+        simulation.set_scada_value(name = DemoScenario.SCADA_SWITCH_NAME, value = 1)
 
-    # Create and schedule a simple print event
-    log_event = typhoon_automator.Utility.create_callback_event(
-      message = "Print demo event",
-      callback = DemoScenario.print_message)
-    event_time = random.uniform(0.0, self._duration)
+    def open_switch(simulation: typhoon_automator.Simulation):
+        simulation.set_scada_value(name = DemoScenario.SCADA_SWITCH_NAME, value = 0)
 
-    simulation.schedule_event(event_time, log_event)
+    def set_up_scenario(
+            self,
+            simulation: typhoon_automator.Simulation):
+        """ Set up the demo scenaro
+        """
+        simulation.set_data_logging_signals([
+            "I_ind",
+            "V_cap"])
 
-    simulation.set_scenario_duration(self._duration)
+        simulation.set_capture_signals(
+            analog_signals = [
+                "I_ind",
+                "V_cap"],
+            digital_signals = [])
 
-  def tear_down_scenario(
-      self,
-      simulation: typhoon_automator.Simulation):
-    pass
+        # Create and schedule switch close and open events
+        close_event = typhoon_automator.Utility.create_callback_event(
+            message = "Closing switch",
+            callback = DemoScenario.close_switch)
+        close_time = random.uniform(0.0, self._duration / 2)
+
+        open_event = typhoon_automator.Utility.create_callback_event(
+            message = "Opening switch",
+            callback = DemoScenario.open_switch)
+        open_time = random.uniform(self._duration / 2, self._duration)
+
+        simulation.schedule_event(close_time, close_event)
+        simulation.schedule_event(open_time, open_event)
+
+        # Set scenario duration
+        simulation.set_scenario_duration(self._duration)
+
+        # Initialize switch as open
+        DemoScenario.open_switch(simulation)
+
+
+    def tear_down_scenario(
+            self,
+            simulation: typhoon_automator.Simulation):
+        pass
