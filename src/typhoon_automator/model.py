@@ -127,7 +127,7 @@ class ModelManager(object):
         :raises ValueError: A configuration value is invalid
         """
         if math.isclose(self._model_timestep, 0.0) or self._model_timestep > ModelManager.MAX_TIMESTEP:
-          raise ValueError(f"Invalid model timestep ({self.model_timestep})") #this is handled in load_schematic-- should I also check it here?
+          raise ValueError(f"Invalid model timestep ({self._model_timestep})") #this is handled in load_schematic-- should I also check it here?
         
         return int(time / self._model_timestep)
 
@@ -142,7 +142,7 @@ class ModelManager(object):
         :raises ValueError: A configuration value is invalid
         """
         if math.isclose(self._model_timestep, 0.0) or self._model_timestep > ModelManager.MAX_TIMESTEP:
-          raise ValueError(f"Invalid model timestep ({self.model_timestep})")
+          raise ValueError(f"Invalid model timestep ({self._model_timestep})")
     
         return float(step * self._model_timestep)
 
