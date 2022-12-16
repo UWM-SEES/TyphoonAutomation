@@ -1,3 +1,5 @@
+import logging
+
 from typing import Any
 from pathlib import Path
 from datetime import datetime
@@ -30,7 +32,7 @@ class Orchestrator(object):
         self._scenarios = {}
         
         self._data_logging_path: str = None
-        self._data_logging_signals: list[str] = []
+        self._capture_path: str = None
 
     def add_scenario(
             self,
@@ -69,14 +71,16 @@ class Orchestrator(object):
         data_log_filename = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}_{name}.csv"
         data_log_filename = str(Path(self._data_logging_path) / data_log_filename)
 
+        capture_filename = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}_{name}.csv"
+        capture_filename = str(Path(self._capture_path) / capture_filename)
+
         try:
             self._automator.log(f"*** Running scenario: {name} ***")
 
             scenario = self._scenarios[name]
 
-            self._simulation.configure_data_logging(
-                signals = self._data_logging_signals,
-                filename = data_log_filename)
+            self._simulation.set_data_logging_filename(data_log_filename)
+            self._simulation.set_capture_filename(capture_filename)
 
             self._simulation.initialize(scenario)
             self._simulation.run()
@@ -90,20 +94,34 @@ class Orchestrator(object):
         for name in self._scenarios.keys():
             self.run_scenario(name)
 
-    def configure_data_logging(
+    def set_data_logging_path(
             self,
-            output_path: str,
-            signals: list[str]):
+            output_path: str):
         if not output_path:
             raise ValueError("Logging output path cannot be empty")
 
-        if (not signals) or (len(signals) < 1):
-            raise ValueError("Signal list cannot be empty")
-
-        # Create output path if it doesn't exist
-        path = Path(output_path)
-        if not path.exists():
-            path.mkdir(parents = True, exist_ok = True)
+        try:
+            # Create output path if it doesn't exist
+            path = Path(output_path)
+            if not path.exists():
+                path.mkdir(parents = True, exist_ok = True)
+        except:
+            self._automator.log("Failed to create data logging path", level = logging.ERROR)
         
         self._data_logging_path = output_path
-        self._data_logging_signals = signals
+
+    def set_capture_path(
+            self,
+            output_path: str):
+        if not output_path:
+            raise ValueError("Logging output path cannot be empty")
+
+        try:
+            # Create output path if it doesn't exist
+            path = Path(output_path)
+            if not path.exists():
+                path.mkdir(parents = True, exist_ok = True)
+        except:
+            self._automator.log("Failed to create data logging path", level = logging.ERROR)
+
+        self._capture_path = output_path

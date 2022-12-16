@@ -30,13 +30,7 @@ classDiagram
     +is_connected() bool
 
     +set_data_logger_path(str path)
-    +add_data_logger_signals(list~str~ signals)
-    +clear_data_logger_signals()
-
-    +set_capture_filename(str filename)
-    +add_analog_capture_signals(list~str~ signals)
-    +add_digital_capture_signals(list~str~ signals)
-    +clear_capture_signals()
+    +set_capture_path(str path)
 
     +add_scenario(str name, Scenario scenario)
     +clear_scenarios()
@@ -134,7 +128,13 @@ classDiagram
     +save_model_state(str filename)
     +load_model_state(str filename)
 
-    +configure_data_logging(list~str~ signals, str filename)
+    +set_data_logging_signals(list~str~ signals)
+    +set_data_logging_filename(str filename)
+
+    +set_capture_signals(list~str~ analog_signals, list~str~ digital_signals)
+    +set_capture_filename(str filename)
+
+    +set_scada_value(str name, Any value)
   }
 
   Simulation *-- EventSchedule

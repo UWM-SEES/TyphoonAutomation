@@ -26,12 +26,8 @@ class TyphoonAutomator(object):
         self._schematic_filename: str = None             # Filename of schematic
         self._compiled_filename: str = None              # Filename of compiled model
 
-        self._data_log_signals: list[str] = []           # List of signals to log
-        self._data_log_path: str = None                  # Path for signal log
-
-        self._analog_capture_signals: list[str] = []     # Analog capture signal names
-        self._digital_capture_signals: list[str] = []    # Digital capture signal names
-        self._capture_filename: str = None               # Filename for signal capture
+        self._data_logger_path: str = None               # Path for data logging
+        self._capture_path: str = None                   # Path for signal capture
 
         self._hil_setup = self._create_hilsetup()
         self._model = self._create_modelmanager()
@@ -81,13 +77,6 @@ class TyphoonAutomator(object):
             raise ValueError("Schematic path cannot be empty")
 
         self.log("Initializing automator")
-
-        # Reset data logging and capture
-        self.clear_data_logger_signals()
-        self._data_log_path = None
-
-        self.clear_capture_signals()
-        self._capture_filename = None
 
         # Load schematic
         self._compiled_filename = None
@@ -148,67 +137,18 @@ class TyphoonAutomator(object):
         """
         if not path:
             raise ValueError('Data logging path cannot be empty')
-        self._data_log_path = path
+        self._data_logger_path = path
 
-    def add_data_logger_signals(
+    def set_capture_path(
             self,
-            signals: list[str]):
-        """ Add streaming signals to be logged
+            path: str):
+        """ Set the directory for capture output
         
-        :param list[str] signals: Names of streaming signals to be logged
-        :raises ValueError: The loaded schematic does not contain one or more of the signal names
+        :param str path: Path to directory for capture output
         """
-        if (not signals) or (len(signals) < 1):
-            raise ValueError('The loaded schematic does not contain one or more of the signal names')
-        self._data_log_signals = self._data_log_signals + signals
-
-    def clear_data_logger_signals(self):
-        """ Clear the list of data logging signal names """
-        self._data_log_signals = []
-
-    def set_capture_filename(
-            self,
-            filename: str):
-        """ Set the file name for capture signals
-        
-        :param str filename: Path to file for capture output
-        """
-        if not filename:
-            raise ValueError('Capture filename cannot be empty')  
-        self._capture_filename = filename
-
-    def add_analog_capture_signals(
-            self,
-            signals: list[str]):
-        """ Add analog signals to be captured
-        
-        :param list[str] signals: Names of analog signals to be captured
-        :raises ValueError: The loaded schematic does not contain one or more of the signal names
-        """
-        if (not signals) or (len(signals) < 1):
-            raise ValueError('The loaded schematic does not contain one or more of the signal names')
-
-        # TODO: Compare signal list with schematic to ensure all specified signal names exist
-        self._analog_capture_signals = self._analog_capture_signals + signals
-
-    def add_digital_capture_signals(
-            self,
-            signals: list[str]):
-        """ Add digital signals to be captured
-        
-        :param list[str] signals: Names of digital signals to be captured
-        :raises ValueError: The loaded schematic does not contain one or more of the signal names
-        """
-        if (not signals) or (len(signals) < 1):
-            raise ValueError('The loaded schematic does not contain one or more of the signal names')
-        
-        # TODO: Compare signal list with schematic to ensure all specified signal names exist
-        self._digital_capture_signals = self._digital_capture_signals + signals
-
-    def clear_capture_signals(self):
-        """ Clear the list of capture signal names """
-        self._analog_capture_signals = []
-        self._digital_capture_signals = []
+        if not path:
+            raise ValueError('Capture path cannot be empty')  
+        self._capture_path = path
 
     def add_scenario(
             self,
@@ -252,9 +192,10 @@ class TyphoonAutomator(object):
         if use_vhil:
             self.log("Using Virtual HIL", level = logging.WARNING)
 
-        self._orchestrator.configure_data_logging(
-            output_path = self._data_log_path,
-            signals = self._data_log_signals)
+        if self._data_logger_path:
+            self._orchestrator.set_data_logging_path(self._data_logger_path)
+        if self._capture_path:
+            self._orchestrator.set_capture_path(self._capture_path)
 
         self._model.load_to_setup(use_vhil = use_vhil)
     

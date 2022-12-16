@@ -17,6 +17,8 @@ class Simulation(object):
     Interface for interacting with a simulation
     """
 
+    DATA_LOGGER_NAME: str = "TyphoonAutomator"
+
     def __init__(
             self,
             automator,
@@ -44,10 +46,12 @@ class Simulation(object):
 
         self._update_interval = 30.0
 
-        self._data_log_signals: list[str] = []
-        self._data_log_filename: str = None
-        self._data_logger_name: str = None
+        self._data_logging_signals: list[str] = []
+        self._data_logging_filename: str = None
 
+        self._analog_capture_signals: list[str] = []
+        self._digital_capture_signals: list[str] = []
+        self._capture_filename: str = None
 
     def initialize(
             self,
@@ -148,6 +152,12 @@ class Simulation(object):
                 # Pop next event from schedule and invoke the event
                 event = self._schedule.pop_next_event()
                 self.invoke_event(event)
+
+        # TODO: This is sloppy fix to allow the data logger to finish logging
+        # TODO: See the stop_data_logger function for info on the bug which prompts this
+        logger_delay = 3
+        self._automator.log(f"Delaying {logger_delay} seconds for data logging flush", level = logging.WARNING)
+        time.sleep(logger_delay)
 
         # Simulation loop is finished, stop simulation
         self.stop_simulation()
@@ -318,35 +328,44 @@ class Simulation(object):
     def start_data_logger(self):
         """ Start the data logger
         """
-        if not self._data_logger_name:
-            self._automator.log("Data logging not configured, not starting", level = logging.WARNING)
+        if not self._data_logging_filename:
+            self._automator.log("No data logging filename, not starting", level = logging.WARNING)
             return
 
-        self._automator.log(f"Starting data logger, file {self._data_log_filename}")
+        if not self._data_logging_signals:
+            self._automator.log("No data logging signals, not starting", level = logging.WARNING)
+            return
+
+        self._automator.log(f"Starting data logger, file {self._data_logging_filename}")
     
         if not hil.add_data_logger(
-                name = self._data_logger_name,
-                data_file = self._data_log_filename,
-                signals = self._data_log_signals,
+                name = Simulation.DATA_LOGGER_NAME,
+                data_file = self._data_logging_filename,
+                signals = self._data_logging_signals,
                 use_suffix = False):
             raise RuntimeError("Failed to add data logger")
         
-        if not hil.start_data_logger(name = self._data_logger_name):
+        if not hil.start_data_logger(name = Simulation.DATA_LOGGER_NAME):
             raise RuntimeError("Failed to start data logger")
 
     def stop_data_logger(self):
         """ Stop the data logger
         """
-        if not self._data_logger_name:
-            self._automator.log("Data logging not configured, not stopping", level = logging.WARNING)
+        # TODO: Open a Typhoon support ticket for this
+        # Error message is always "get_data_logger_status() missing 1 required positional argument: 'name'"
+        #status = hil.get_data_logger_status(name = Simulation.DATA_LOGGER_NAME)
+
+        # TODO: Instead of this, use the data logger status to determine if logging needs to be stopped
+        if not self._data_logging_filename:
+            self._automator.log("No data logging filename, not stopping", level = logging.WARNING)
             return
 
         self._automator.log("Stopping data logger")
 
-        if not hil.stop_data_logger(name = self._data_logger_name):
+        if not hil.stop_data_logger(name = Simulation.DATA_LOGGER_NAME):
             self._automator.log("Failed to stop data logger", level = logging.ERROR)
         
-        if not hil.remove_data_logger(name = self._data_logger_name):
+        if not hil.remove_data_logger(name = Simulation.DATA_LOGGER_NAME):
             self._automator.log("Failed to remove data logger", level = logging.ERROR)
 
     def set_stop_signal(self):
@@ -419,17 +438,45 @@ class Simulation(object):
         if sim_running:
             self.start_simulation()
 
-    def configure_data_logging(
+    def set_data_logging_signals(
             self,
-            signals: list[str],
+            signals: list[str]):
+        if signals is None:
+            raise ValueError("Data logging signal list cannot be None")
+
+        self._data_logging_signals = signals.copy()
+
+    def set_data_logging_filename(
+            self,
             filename: str):
         if not filename:
             raise ValueError("Filename cannot be empty")
 
-        if (not signals) or (len(signals) < 1):
-            raise ValueError("Signal list cannot be empty")
+        self._data_logging_filename = filename
 
-        self._data_log_signals = signals.copy()
-        self._data_log_filename = filename
+    def set_capture_signals(
+            self,
+            analog_signals: list[str],
+            digital_signals: list[str]):
+        if analog_signals is None:
+            raise ValueError("Analog signal list cannot be None")
 
-        self._data_logger_name = "SimulationDataLogger"
+        if digital_signals is None:
+            raise ValueError("Digital signal list cannot be None")
+
+        self._analog_capture_signals = analog_signals.copy()
+        self._digital_capture_signals = digital_signals.copy()
+
+    def set_capture_filename(
+            self,
+            filename: str):
+        if not filename:
+            raise ValueError("Filename cannot be empty")
+
+        self._capture_filename = filename
+
+    def set_scada_value(
+            self,
+            name: str,
+            value: Any):
+        self._model.set_scada_value(name = name, value = value)
