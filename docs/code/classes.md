@@ -45,6 +45,11 @@ classDiagram
 
     +run(bool use_vhil)
     +shutdown()
+
+    -create_hilsetup() HilSetupManager
+    -create_modelmanager() ModelManager
+    -create_orchestrator() Orchestrator
+    -create_simulation() Simulation
   }
 
   TyphoonAutomator *-- HilSetupManager
@@ -85,7 +90,8 @@ classDiagram
     -Simulation simulation
 
     +add_scenario(Scenario scenario)
-    +run()
+    +run_scenario(str name)
+    +run_all()
   }
 
   Orchestrator -- Simulation
@@ -97,6 +103,8 @@ classDiagram
     -EventSchedule schedule
 
     +initialize(Scenario scenario)
+    +run()
+    +finalize(Scenario scenario)
 
     +schedule_event(float sim_time, SimEvent event)
     +invoke_event(SimEvent event)
@@ -118,6 +126,8 @@ classDiagram
     +set_stop_signal()
     +clear_stop_signal()
     +get_stop_signal() bool
+
+    +set_scenario_duration(float duration)
   }
 
   Simulation *-- EventSchedule
@@ -142,7 +152,7 @@ classDiagram
   class SimEvent {
     <<interface>>
     +message
-    +invoke()
+    +invoke(Simulation simulation)
   }
 
   class Scenario {

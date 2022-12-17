@@ -1,5 +1,8 @@
 import logging
 
+from datetime import datetime
+from typing import Any
+
 from .hilsetup import HilSetupManager
 from .model import ModelManager
 from .orchestrator import Orchestrator
@@ -30,8 +33,10 @@ class TyphoonAutomator(object):
     _capture_filename: str = None               # Filename for signal capture
 
     def __init__(self):
-        self._hil_setup = HilSetupManager(self)
-        self._model = ModelManager(self)
+        self._hil_setup = self._create_hilsetup()
+        self._model = self._create_modelmanager()
+        self._simulation = self._create_simulation()
+        self._orchestrator = self._create_orchestrator()
 
     def set_automation_logger(
             self,
@@ -142,9 +147,8 @@ class TyphoonAutomator(object):
         :param str filename: Path to file for data logging output
         """
         if not filename:
-            raise ValueError('Data log filename cannot be empty')  
+            raise ValueError('Data log filename cannot be empty')
         self._data_log_filename = filename
-        
 
     def add_data_logger_signals(
             self,
@@ -183,7 +187,8 @@ class TyphoonAutomator(object):
         """
         if (not signals) or (len(signals) < 1):
             raise ValueError('The loaded schematic does not contain one or more of the signal names')
-        
+
+        # TODO: Compare signal list with schematic to ensure all specified signal names exist
         self._analog_capture_signals.append(signals)
 
     def add_digital_capture_signals(
@@ -196,9 +201,10 @@ class TyphoonAutomator(object):
         """
         if (not signals) or (len(signals) < 1):
             raise ValueError('The loaded schematic does not contain one or more of the signal names')
-
-        self._digital_capture_signals.append(signals)
         
+        # TODO: Compare signal list with schematic to ensure all specified signal names exist
+        self._digital_capture_signals.append(signals)
+
     def clear_capture_signals(self):
         """ Clear the list of capture signal names """
         self._analog_capture_signals = []
@@ -243,12 +249,15 @@ class TyphoonAutomator(object):
         if self._orchestrator is None:
             raise RuntimeError("Automation is not initialized")
         
-        self._model.load_to_setup(use_vhil=use_vhil)
+        if use_vhil:
+            self.log("Using Virtual HIL", level = logging.WARNING)
+
+        self._model.load_to_setup(use_vhil = use_vhil)
     
         start_time = datetime.now()
         self.log(f"Starting scenario simulations at {start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
     
-        self._orchestrator.run()
+        self._orchestrator.run_all()
     
         stop_time = datetime.now()
         self.log(f"Ended scenario simulations at {stop_time.strftime('%H:%M:%S, %m/%d/%Y')}")
@@ -279,4 +288,54 @@ class TyphoonAutomator(object):
         # Log shutdown  
         shutdown_time = datetime.now()
         self.log(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
-      
+
+    def _create_hilsetup(self) -> HilSetupManager:
+        return HilSetupManager(
+            automator = self)
+
+    def _create_modelmanager(self) -> ModelManager:
+         return ModelManager(
+            automator = self)
+
+    def _create_orchestrator(self) -> Orchestrator:
+        if self._simulation is None:
+            raise RuntimeError("Automator simulation is not initialized")
+
+        return Orchestrator(
+            automator = self,
+            simulation = self._simulation)
+
+    def _create_simulation(self) -> Simulation:
+        if self._model is None:
+            raise RuntimeError("Automator model manager is not initialized")
+
+        return Simulation(
+            automator = self,
+            model = self._model)
+
+
+class Utility(object):
+    """ Utility class
+    
+    Contains helpful methods
+    """
+
+    def create_callback_event(
+            message: str,
+            callback) -> Any:
+        """ Create a generic callback event
+
+        The function to be called should take a Simulation object as the only argument
+
+        :param str message: The message to be logged when the event is invoked
+        :param callback: Function to call when invoked
+        :return An object with a 'message' string and an 'invoke(Simulation)' method
+        :rtype Any
+        """
+        class _CallbackEvent(object):
+            pass
+        
+        event = _CallbackEvent()
+        setattr(event, "message", message)
+        setattr(event, "invoke", callback)
+        return event
