@@ -114,8 +114,8 @@ classDiagram
     +get_simulation_time() float
     +get_simulation_step() int
 
-    +start_capture()
-    +stop_capture()
+    +schedule_capture(float start_time, float duration, int decimation)
+    +stop_capture(float timeout)
     +is_capture_in_progress() bool
 
     +start_data_logger()

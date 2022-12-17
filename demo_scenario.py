@@ -45,6 +45,9 @@ class DemoScenario(object):
         simulation.schedule_event(close_time, close_event)
         simulation.schedule_event(open_time, open_event)
 
+        # Schedule a 100 millisecond capture starting 50 milliseconds before the switch close
+        simulation.schedule_capture(start_time = close_time - 0.05, duration = 0.1)
+
         # Set scenario duration
         simulation.set_scenario_duration(self._duration)
 
