@@ -89,7 +89,8 @@ classDiagram
     +run_scenario(str name)
     +run_all()
 
-    +configure_data_logging(str output_path, list~str~ signals)
+    +set_data_logging_path(str output_path)
+    +set_capture_path(str output_path)
   }
 
   Orchestrator -- Simulation
