@@ -23,8 +23,8 @@ logger.setLevel(HIL_LOG_LEVEL)
 
 # Set example information
 DEMO_SCHEMATIC = "./examples/rlc.tse"
-DEMO_SIGNAL_LOG = "./output/signals.csv"
-DEMO_CAPTURE_LOG = "./output/capture.csv"
+DEMO_DATA_LOG_PATH = "./output/data/"
+DEMO_CAPTURE_PATH = "./output/capture/"
 
 
 # Set up and run automator
@@ -51,17 +51,9 @@ try:
   # Initialize the automator with the schematic
   automator.initialize(DEMO_SCHEMATIC, conditional_compile = True)
   
-  # Add data logging filename and signals
-  automator.set_data_logger_filename(DEMO_SIGNAL_LOG)
-  automator.add_data_logger_signals([
-    "I_ind",
-    "V_cap"])
-  
-  # Add capture filename and signals
-  automator.set_capture_filename(DEMO_CAPTURE_LOG)
-  automator.add_analog_capture_signals([
-    "I_ind",
-    "V_cap"])
+  # Add data logging and capture paths
+  automator.set_data_logger_path(DEMO_DATA_LOG_PATH)
+  automator.set_capture_path(DEMO_CAPTURE_PATH)
 
   # Add some demo scenarios
   automator.add_scenario(name = "Demo Scenario 1", scenario = DemoScenario(1.0))

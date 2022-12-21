@@ -29,14 +29,8 @@ classDiagram
     +disconnect()
     +is_connected() bool
 
-    +set_data_logger_filename(str filename)
-    +add_data_logger_signals(list~str~ signals)
-    +clear_data_logger_signals()
-
-    +set_capture_filename(str filename)
-    +add_analog_capture_signals(list~str~ signals)
-    +add_digital_capture_signals(list~str~ signals)
-    +clear_capture_signals()
+    +set_data_logger_path(str path)
+    +set_capture_path(str path)
 
     +add_scenario(str name, Scenario scenario)
     +clear_scenarios()
@@ -76,6 +70,8 @@ classDiagram
     +simtime_to_simstep(float time) int
     +simstep_to_simtime(int step) float
 
+    +get_model_timestep() float
+
     +save_model_state(str filename)
     +load_model_state(str filename)
 
@@ -92,6 +88,9 @@ classDiagram
     +add_scenario(Scenario scenario)
     +run_scenario(str name)
     +run_all()
+
+    +set_data_logging_path(str output_path)
+    +set_capture_path(str output_path)
   }
 
   Orchestrator -- Simulation
@@ -116,8 +115,8 @@ classDiagram
     +get_simulation_time() float
     +get_simulation_step() int
 
-    +start_capture()
-    +stop_capture()
+    +schedule_capture(float start_time, float duration, int decimation)
+    +stop_capture(float timeout)
     +is_capture_in_progress() bool
 
     +start_data_logger()
@@ -128,6 +127,17 @@ classDiagram
     +get_stop_signal() bool
 
     +set_scenario_duration(float duration)
+
+    +save_model_state(str filename)
+    +load_model_state(str filename)
+
+    +set_data_logging_signals(list~str~ signals)
+    +set_data_logging_filename(str filename)
+
+    +set_capture_signals(list~str~ analog_signals, list~str~ digital_signals)
+    +set_capture_filename(str filename)
+
+    +set_scada_value(str name, Any value)
   }
 
   Simulation *-- EventSchedule

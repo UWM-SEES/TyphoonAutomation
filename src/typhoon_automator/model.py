@@ -68,7 +68,7 @@ class ModelManager(object):
         self._automator.log(f"Model timestep is {timestep}")
 
         self._schematic_filename = filename
-        self._model_timestep = float(timestep)
+        self._model_timestep = timestep
 
     def compile(
             self,
@@ -127,7 +127,7 @@ class ModelManager(object):
         :raises ValueError: A configuration value is invalid
         """
         if math.isclose(self._model_timestep, 0.0) or self._model_timestep > ModelManager.MAX_TIMESTEP:
-          raise ValueError(f"Invalid model timestep ({self.model_timestep})") #this is handled in load_schematic-- should I also check it here?
+          raise ValueError(f"Invalid model timestep ({self._model_timestep})") #this is handled in load_schematic-- should I also check it here?
         
         return int(time / self._model_timestep)
 
@@ -142,9 +142,17 @@ class ModelManager(object):
         :raises ValueError: A configuration value is invalid
         """
         if math.isclose(self._model_timestep, 0.0) or self._model_timestep > ModelManager.MAX_TIMESTEP:
-          raise ValueError(f"Invalid model timestep ({self.model_timestep})")
+          raise ValueError(f"Invalid model timestep ({self._model_timestep})")
     
         return float(step * self._model_timestep)
+
+    def get_model_timestep(self) -> float:
+        """ Get the model timestep
+
+        :returns Model timestep
+        :rtype float
+        """
+        return self._model_timestep
 
     def save_model_state(
             self,
@@ -185,7 +193,8 @@ class ModelManager(object):
             self,
             name: str,
             value: Any):
-        raise NotImplementedError()
+        if not hil.set_scada_input_value(scadaInputName = name, value = value):
+            raise RuntimeError(f"Failed to set SCADA input {name} to value {value}")
 
     def set_model_variable(
             self,

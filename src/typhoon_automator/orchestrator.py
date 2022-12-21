@@ -1,4 +1,8 @@
+import logging
+
 from typing import Any
+from pathlib import Path
+from datetime import datetime
 
 from .simulation import Simulation
 
@@ -26,6 +30,9 @@ class Orchestrator(object):
         self._simulation = simulation
 
         self._scenarios = {}
+        
+        self._data_logging_path: str = None
+        self._capture_path: str = None
 
     def add_scenario(
             self,
@@ -61,19 +68,60 @@ class Orchestrator(object):
         if not (name in self._scenarios):
             raise KeyError(f"Scenario {name} does not exist")
 
+        data_log_filename = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}_{name}.csv"
+        data_log_filename = str(Path(self._data_logging_path) / data_log_filename)
+
+        capture_filename = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}_{name}.csv"
+        capture_filename = str(Path(self._capture_path) / capture_filename)
+
         try:
             self._automator.log(f"*** Running scenario: {name} ***")
 
             scenario = self._scenarios[name]
+
+            self._simulation.set_data_logging_filename(data_log_filename)
+            self._simulation.set_capture_filename(capture_filename)
+
             self._simulation.initialize(scenario)
             self._simulation.run()
             self._simulation.finalize(scenario)
 
         except BaseException as ex:
             self._automator.log(f"Failed to run scenario {name}")
-            self._automator.log_exception(ex)
             raise
 
     def run_all(self):
         for name in self._scenarios.keys():
             self.run_scenario(name)
+
+    def set_data_logging_path(
+            self,
+            output_path: str):
+        if not output_path:
+            raise ValueError("Logging output path cannot be empty")
+
+        try:
+            # Create output path if it doesn't exist
+            path = Path(output_path)
+            if not path.exists():
+                path.mkdir(parents = True, exist_ok = True)
+        except:
+            self._automator.log("Failed to create data logging path", level = logging.ERROR)
+        
+        self._data_logging_path = output_path
+
+    def set_capture_path(
+            self,
+            output_path: str):
+        if not output_path:
+            raise ValueError("Logging output path cannot be empty")
+
+        try:
+            # Create output path if it doesn't exist
+            path = Path(output_path)
+            if not path.exists():
+                path.mkdir(parents = True, exist_ok = True)
+        except:
+            self._automator.log("Failed to create data logging path", level = logging.ERROR)
+
+        self._capture_path = output_path

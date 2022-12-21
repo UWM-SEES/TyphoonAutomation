@@ -17,6 +17,8 @@ class Simulation(object):
     Interface for interacting with a simulation
     """
 
+    DATA_LOGGER_NAME: str = "TyphoonAutomator"
+
     def __init__(
             self,
             automator,
@@ -44,6 +46,13 @@ class Simulation(object):
 
         self._update_interval = 30.0
 
+        self._data_logging_signals: list[str] = []
+        self._data_logging_filename: str = None
+
+        self._analog_capture_signals: list[str] = []
+        self._digital_capture_signals: list[str] = []
+        self._capture_filename: str = None
+
     def initialize(
             self,
             scenario: Any):
@@ -70,6 +79,7 @@ class Simulation(object):
             self.schedule_event(
                 sim_time = self._scenario_duration,
                 event = stop_event)
+            self.clear_stop_signal()
 
         except AttributeError:
             if not hasattr(scenario, "set_up_scenario"):
@@ -105,7 +115,9 @@ class Simulation(object):
         """ Run the simulation until the stop signal is set
         """
         self.clear_stop_signal()
+        self.start_data_logger()
         self.start_simulation()
+        self._automator.log(f"Scenario started at {self._start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
         last_update_time = datetime.now()
 
@@ -141,8 +153,16 @@ class Simulation(object):
                 event = self._schedule.pop_next_event()
                 self.invoke_event(event)
 
+        # TODO: This is sloppy fix to allow the data logger to finish logging
+        # TODO: See the stop_data_logger function for info on the bug which prompts this
+        logger_delay = 3
+        self._automator.log(f"Delaying {logger_delay} seconds for data logging flush", level = logging.WARNING)
+        time.sleep(logger_delay)
+
         # Simulation loop is finished, stop simulation
         self.stop_simulation()
+        self.stop_data_logger()
+        self._automator.log(f"Scenario stopped at {self._stop_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
         elapsed_time = self._stop_time - self._start_time
         self._automator.log(f"Elapsed wall time: {elapsed_time.total_seconds()} seconds")
@@ -190,9 +210,6 @@ class Simulation(object):
     def start_simulation(self):
         """ Start the simulation
         """
-        # Start data logger
-        self.start_data_logger()
-    
         # Start simulation
         self._automator.log("Starting simulation")
         if self.is_simulation_running():
@@ -201,14 +218,10 @@ class Simulation(object):
         hil.start_simulation()
 
         self._start_time = datetime.now()
-        self._automator.log(f"Scenario started at {self._start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
     def stop_simulation(self):
         """ Stop the simulation
         """
-        # Stop data logger
-        self.stop_data_logger()
-                  
         # Stop simulation
         if self.is_simulation_running():
             self._automator.log("Stopping simulation")
@@ -223,7 +236,6 @@ class Simulation(object):
             self._automator.log("Stop simulation called but simulation was not running", level = logging.WARNING)
         
         self._stop_time = datetime.now()
-        self._automator.log(f"Scenario stopped at {self._stop_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
     def is_simulation_running(self) -> bool:
         """ Check if the simulation is running
@@ -249,61 +261,112 @@ class Simulation(object):
         """
         return hil.get_sim_step()
 
-    def start_capture(self):
-        """ Start the data capture
+    def schedule_capture(
+            self,
+            start_time: float,
+            duration: float,
+            decimation: int = 1):
+        """ Schedule the signal capture
 
+        :param float start_time: Simulation time (in seconds) to start capture
+        :param float duration: Simulation time duration (in seconds) of the capture
+        :param int decimation: Capture downsampling value
         :raises ValueError: A configuration value is invalid
         """
-        # Ensure configured values are acceptable
+        if start_time <= 0.0:
+            raise ValueError(f"Invalid capture start time ({start_time})")
         
-        # model_timestep
-        if self._model._model_timestep <= 0.0:
-            raise ValueError(f"Invalid timestep ({self._model._model_timestep})")
-        # sample_frequency-- not in model.py?
-        # capture_start_time
-        # capture duration
-        if not self._automator._capture_filename:
-            raise ValueError(f"Invalid capture filename ({self._automator.capture_filename})")
+        if duration <= 0.0:
+            raise ValueError(f"Invalid capture duration ({duration})")
 
+        if decimation < 1:
+            raise ValueError(f"Invalid decimation value ({decimation})")
 
-        # Initialize capture values
-        
-        num_analog_channels = len(self._automator._analog_capture_signals)
-        # num_samples = int(sample_frequency * capture_duration)
-        # decimation = int(1.0 / (self._model._model_timestep * sample_frequency))
+        if not self._capture_filename:
+            raise ValueError(f"Invalid capture filename ({self._capture_filename})")
 
-        capture_digital = len(self._automator._digital_capture_signals) > 0
+        MAX_DIGITAL_CAPTURE_SIGNALS = 32
+        if len(self._digital_capture_signals) > MAX_DIGITAL_CAPTURE_SIGNALS:
+            raise ValueError(f"Invalid number of digital capture signals ({len(self._digital_capture_signals)})")
+
+        timestep = self._model.get_model_timestep()
+        if timestep <= 0.0:
+            raise ValueError(f"Invalid model timestep ({timestep})")
+
+        # Get start and stop steps
+        start_step = self._model.simtime_to_simstep(start_time)
+        stop_step = self._model.simtime_to_simstep(start_time + duration)
+
+        # Adjust duration to minimum if needed
+        MIN_SAMPLES = 256                       # Per Typhoon's documentation
+        if (stop_step - start_step) < MIN_SAMPLES:
+            self._automator.log("Capture duration too small, increasing to minimum duration", level = logging.WARNING)
+            duration = self._model.simstep_to_simtime(MIN_SAMPLES)
+            stop_step = start_step + MIN_SAMPLES
+
+        # Initialize capture info
+        num_analog_channels = len(self._analog_capture_signals)
+        capture_digital = len(self._digital_capture_signals) > 0
         capture_buffer = []
+
+        num_samples = stop_step - start_step
+        if (num_samples & 1) != 0:              # Per Typhoon's documentation, number of samples must be even
+            num_samples = num_samples + 1
+
+        capture_settings = [
+            decimation,             # Decimation
+            num_analog_channels,    # Number of analog channels to capture
+            num_samples,            # Number of samples to capture
+            capture_digital]        # True to capture digital signals
+
+        # TODO: Consider allowing the user to define a trigger, possibly use a trigger factory to build the settings
+        trigger_settings = [
+            "Forced"]
         
-        # Start capture
-        # self._automator.log(f"Capturing {num_samples} samples starting at sim time {self.config.capture_start_time} to {self.config.capture_filename}")
+        channel_settings = [
+            self._analog_capture_signals,
+            self._digital_capture_signals]  # TODO: Check number of digital channels
 
+        # Schedule capture
+        self._automator.log(f"Scheduling capture from {round(start_time, 6)} to {round(start_time + duration, 6)}, file {self._capture_filename}")
+        if not hil.start_capture(
+                cpSettings = capture_settings,
+                trSettings = trigger_settings,
+                chSettings = channel_settings,
+                dataBuffer = capture_buffer,
+                fileName = self._capture_filename,
+                executeAt = start_time,
+                timeout = None):
+            raise RuntimeError("Failed to schedule capture")
 
-        # TODO: Clean up capture parameters, e.g. trigger and execute-at time
-##        if not hil.start_capture(
-##            cpSettings = [
-##              decimation,
-##              num_analog_channels,
-##              num_samples,
-##              capture_digital],
-##            trSettings = ["Forced"],
-##            chSettings = [
-##              self._automator._analog_capture_signals,
-##              self._automator._digital_capture_signals],
-##            dataBuffer = capture_buffer,
-##            fileName = self.config.capture_filename,
-##            executeAt = self.config.capture_start_time):  # TODO: executeAt doesn't work as expected (perhaps this isn't its correct use)
-##            raise RuntimeError("Failed to start capture")
-
-        raise NotImplementedError() # NOT DONE
-
-    def stop_capture(self):
+    def stop_capture(
+            self,
+            timeout: float = 0.0):
         """ Stop the data capture
     
         :param float timeout: Time to wait for data capture in progress to stop
         """
-        # are we using schedule?
-        raise NotImplementedError()
+        if timeout > 0.0:
+            start_time = datetime.now()
+            elapsed_time = timedelta(seconds = 0.0)
+            self._automator.log(f"Waiting for capture to stop, timeout {timeout}")
+
+            # Wait for capture to stop, timing out if necessary
+            while elapsed_time.total_seconds() < timeout:
+                if not self.is_capture_in_progress():
+                    self._automator.log("Capture stopped")
+                    return
+
+                time.sleep(0)   # TODO: Is there a better way to yield without using the threading library?
+                elapsed_time = datetime.now() - start_time
+
+        # Stop capture
+        if self.is_capture_in_progress():
+            self._automator.log("Stopping capture")
+            if not hil.stop_capture():
+                self._automator.log("Failed to stop capture", level = logging.ERROR)
+        else:
+            self._automator.log("Stop capture called but capture was not in progress", level = logging.WARNING)
 
     def is_capture_in_progress(self) -> bool:
         """ Check if capture is in progress
@@ -316,14 +379,45 @@ class Simulation(object):
     def start_data_logger(self):
         """ Start the data logger
         """
-        # TODO: Implement this function
-        self._automator.log("Simulation.start_data_logger method is not implemented", level = logging.WARNING)
+        if not self._data_logging_filename:
+            self._automator.log("No data logging filename, not starting", level = logging.WARNING)
+            return
+
+        if not self._data_logging_signals:
+            self._automator.log("No data logging signals, not starting", level = logging.WARNING)
+            return
+
+        self._automator.log(f"Starting data logger, file {self._data_logging_filename}")
+    
+        if not hil.add_data_logger(
+                name = Simulation.DATA_LOGGER_NAME,
+                data_file = self._data_logging_filename,
+                signals = self._data_logging_signals,
+                use_suffix = False):
+            raise RuntimeError("Failed to add data logger")
+        
+        if not hil.start_data_logger(name = Simulation.DATA_LOGGER_NAME):
+            raise RuntimeError("Failed to start data logger")
 
     def stop_data_logger(self):
         """ Stop the data logger
         """
-        # TODO: Implement this function
-        self._automator.log("Simulation.stop_data_logger method is not implemented", level = logging.WARNING)
+        # TODO: Open a Typhoon support ticket for this
+        # Error message is always "get_data_logger_status() missing 1 required positional argument: 'name'"
+        #status = hil.get_data_logger_status(name = Simulation.DATA_LOGGER_NAME)
+
+        # TODO: Instead of this, use the data logger status to determine if logging needs to be stopped
+        if not self._data_logging_filename:
+            self._automator.log("No data logging filename, not stopping", level = logging.WARNING)
+            return
+
+        self._automator.log("Stopping data logger")
+
+        if not hil.stop_data_logger(name = Simulation.DATA_LOGGER_NAME):
+            self._automator.log("Failed to stop data logger", level = logging.ERROR)
+        
+        if not hil.remove_data_logger(name = Simulation.DATA_LOGGER_NAME):
+            self._automator.log("Failed to remove data logger", level = logging.ERROR)
 
     def set_stop_signal(self):
         """ Set the simulation stop signal
@@ -350,3 +444,90 @@ class Simulation(object):
             raise ValueError(f"Invalid scenario duration ({duration})")
         
         self._scenario_duration = duration
+
+    def save_model_state(
+            self,
+            filename: str):
+        if not filename:
+            raise ValueError("Filename cannot be empty")
+
+        sim_running = self.is_simulation_running()
+        self._automator.log(f"Saving model to {filename}, simulation running: {sim_running}")
+
+        if sim_running:
+            self.stop_simulation()
+
+        try:
+            self._model.save_model_state(filename)
+        except BaseException as ex:
+            self._automator.log("Failed to save model state", level = logging.CRITICAL)
+            self._automator.log_exception(ex)
+            raise
+
+        if sim_running:
+            self.start_simulation()
+
+    def load_model_state(
+            self,
+            filename: str):
+        if not filename:
+            raise ValueError("Filename cannot be empty")
+
+        sim_running = self.is_simulation_running()
+        self._automator.log(f"Loading model from {filename}, simulation running: {sim_running}")
+
+        if sim_running:
+            self.stop_simulation()
+
+        try:
+            self._model.load_model_state(filename)
+        except BaseException as ex:
+            self._automator.log("Failed to load model state", level = logging.CRITICAL)
+            self._automator.log_exception(ex)
+            raise
+
+        if sim_running:
+            self.start_simulation()
+
+    def set_data_logging_signals(
+            self,
+            signals: list[str]):
+        if signals is None:
+            raise ValueError("Data logging signal list cannot be None")
+
+        self._data_logging_signals = signals.copy()
+
+    def set_data_logging_filename(
+            self,
+            filename: str):
+        if not filename:
+            raise ValueError("Filename cannot be empty")
+
+        self._data_logging_filename = filename
+
+    def set_capture_signals(
+            self,
+            analog_signals: list[str],
+            digital_signals: list[str]):
+        if analog_signals is None:
+            raise ValueError("Analog signal list cannot be None")
+
+        if digital_signals is None:
+            raise ValueError("Digital signal list cannot be None")
+
+        self._analog_capture_signals = analog_signals.copy()
+        self._digital_capture_signals = digital_signals.copy()
+
+    def set_capture_filename(
+            self,
+            filename: str):
+        if not filename:
+            raise ValueError("Filename cannot be empty")
+
+        self._capture_filename = filename
+
+    def set_scada_value(
+            self,
+            name: str,
+            value: Any):
+        self._model.set_scada_value(name = name, value = value)
