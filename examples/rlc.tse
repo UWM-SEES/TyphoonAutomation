@@ -93,7 +93,7 @@ model "rlc" {
         [
             position = 2360, 1976
             rotation = left
-            scale = -1, 1
+            scale = -1, -1
             size = 64, 32
         ]
 
@@ -190,19 +190,19 @@ model "rlc" {
         connect Sw.a_in Rin.n_node as Connection37
         connect Sw.ctrl_in Sw_ctrl.out as Connection39
         connect Vc.out V_cap.in as Connection41
-        connect L.p_node Il.p_node as Connection50
         connect I_ind.in Il.out as Connection52
         connect R.n_node Junction9 as Connection66
         connect C.p_node Junction9 as Connection68
         connect C.n_node Junction10 as Connection71
         connect L.n_node Junction10 as Connection73
-        connect R.p_node Il.n_node as Connection72
         connect Junction9 Junction11 as Connection74
         connect Junction11 Sw.a_out as Connection75
         connect Vc.p_node Junction11 as Connection76
         connect Junction6 Junction12 as Connection77
         connect Junction12 Junction10 as Connection78
         connect Vc.n_node Junction12 as Connection79
+        connect R.p_node Il.p_node as Connection80
+        connect Il.n_node L.p_node as Connection81
     }
 
     default {
@@ -340,8 +340,8 @@ model "rlc" {
         
         Ts = 1e-4
         
-        C_val = 5e-6
-        I_val = 1e-5
-        R_val = 0.5
+        C_val = 680e-6
+        I_val = 1e-3
+        R_val = 0.1
     ENDCODE
 }
