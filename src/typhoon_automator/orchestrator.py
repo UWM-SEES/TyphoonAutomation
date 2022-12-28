@@ -68,10 +68,10 @@ class Orchestrator(object):
         if not (name in self._scenarios):
             raise KeyError(f"Scenario {name} does not exist")
 
-        data_log_filename = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}_{name}.csv"
+        data_log_filename = f"{datetime.now().strftime('%m%d%H%M%S')}-Data_{name}.csv"
         data_log_filename = str(Path(self._data_logging_path) / data_log_filename)
 
-        capture_filename = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}_{name}.csv"
+        capture_filename = f"{datetime.now().strftime('%m%d%H%M%S')}-Capture_{name}.csv"
         capture_filename = str(Path(self._capture_path) / capture_filename)
 
         try:
