@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "typhoon_automator"
+version = "0.0.1"
+description = "An automation tool for Typhoon HIL simulations"
+readme = "README.md"
+
+requires-python = ">=3.9"
+
+dependencies = [
+    "Typhoon-HIL-API >= 1.20.0",
+]
+
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+packages = ["typhoon_automator"]
