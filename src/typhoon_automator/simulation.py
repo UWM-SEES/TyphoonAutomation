@@ -385,6 +385,10 @@ class Simulation(object):
             self._automator.log("No data logging signals, not starting", level = logging.WARNING)
             return
 
+        if len(self._data_logging_signals) == 0:
+            self._automator.log("No data signals to log", level = logging.WARNING)
+            return
+
         self._automator.log(f"Starting data logger, file {self._data_logging_filename}")
     
         if not hil.add_data_logger(
@@ -407,6 +411,9 @@ class Simulation(object):
         # TODO: Instead of this, use the data logger status to determine if logging needs to be stopped
         if not self._data_logging_filename:
             self._automator.log("No data logging filename, not stopping", level = logging.WARNING)
+            return
+
+        if len(self._data_logging_signals) == 0:
             return
 
         self._automator.log("Stopping data logger")
