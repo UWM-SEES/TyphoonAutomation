@@ -88,7 +88,6 @@ class Simulation(object):
 
         except BaseException as ex:
             self._automator.log("Failed to initialize scenario", level = logging.CRITICAL)
-            self._automator.log_exception(ex)
             raise
 
     def finalize(
@@ -108,7 +107,6 @@ class Simulation(object):
 
         except BaseException as ex:
             self._automator.log("Failed to finalize scenario", level = logging.CRITICAL)
-            self._automator.log_exception(ex)
             raise
 
     def run(self):
@@ -204,7 +202,6 @@ class Simulation(object):
         
         except BaseException as ex:
           self._automator.log("Event invocation failed", level = logging.CRITICAL)
-          self._automator.log_exception(ex)
           raise
 
     def start_simulation(self):
@@ -461,7 +458,6 @@ class Simulation(object):
             self._model.save_model_state(filename)
         except BaseException as ex:
             self._automator.log("Failed to save model state", level = logging.CRITICAL)
-            self._automator.log_exception(ex)
             raise
 
         if sim_running:
@@ -483,7 +479,6 @@ class Simulation(object):
             self._model.load_model_state(filename)
         except BaseException as ex:
             self._automator.log("Failed to load model state", level = logging.CRITICAL)
-            self._automator.log_exception(ex)
             raise
 
         if sim_running:
