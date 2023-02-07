@@ -205,6 +205,19 @@ class Simulation(object):
           self._automator.log("Event invocation failed", level = logging.CRITICAL)
           raise
 
+    def force_stop(self):
+        """ Forcibly stop the simulation
+        
+        This method is intended for error handling purposes.  Normal operation should
+        not call this method
+        """
+        self._automator.log(f"Forcing simulation stop", level = logging.WARNING)
+
+        self.stop_simulation()
+        self.stop_capture(timeout = 3.0)
+        self.stop_data_logger()
+
+
     def start_simulation(self):
         """ Start the simulation
         """

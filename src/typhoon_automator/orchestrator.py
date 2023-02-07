@@ -89,11 +89,10 @@ class Orchestrator(object):
 
         except BaseException as ex:
             self._automator.log(f"Failed to run scenario {name}", level = logging.ERROR)
-            self._scenario_exceptions.append((name, ex))
 
-            self._simulation.stop_simulation()
-            self._simulation.stop_data_logger()
-            self._simulation.stop_capture()
+            # Store exception and force simulation stop
+            self._scenario_exceptions.append((name, ex))
+            self._simulation.force_stop()
 
         finally:
             self._simulation.finalize(scenario)
