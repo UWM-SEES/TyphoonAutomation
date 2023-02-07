@@ -87,7 +87,7 @@ class Orchestrator(object):
             self._simulation.finalize(scenario)
 
         except BaseException as ex:
-            self._automator.log(f"Failed to run scenario {name}")
+            self._automator.log(f"Failed to run scenario {name}", level = logging.ERROR)
             raise
 
     def run_all(self):
@@ -107,6 +107,7 @@ class Orchestrator(object):
                 path.mkdir(parents = True, exist_ok = True)
         except:
             self._automator.log("Failed to create data logging path", level = logging.ERROR)
+            raise
         
         self._data_logging_path = output_path
 
@@ -123,5 +124,6 @@ class Orchestrator(object):
                 path.mkdir(parents = True, exist_ok = True)
         except:
             self._automator.log("Failed to create data logging path", level = logging.ERROR)
+            raise
 
         self._capture_path = output_path
