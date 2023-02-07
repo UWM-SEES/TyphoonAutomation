@@ -34,6 +34,8 @@ class Orchestrator(object):
         self._data_logging_path: str = None
         self._capture_path: str = None
 
+        self._scenario_exceptions: list = []
+
     def add_scenario(
             self,
             name: str,
@@ -84,13 +86,20 @@ class Orchestrator(object):
 
             self._simulation.initialize(scenario)
             self._simulation.run()
-            self._simulation.finalize(scenario)
 
         except BaseException as ex:
             self._automator.log(f"Failed to run scenario {name}", level = logging.ERROR)
-            raise
+            self._scenario_exceptions.append((name, ex))
+
+            self._simulation.stop_simulation()
+            self._simulation.stop_data_logger()
+            self._simulation.stop_capture()
+
+        finally:
+            self._simulation.finalize(scenario)
 
     def run_all(self):
+        self.clear_scenario_exceptions()
         for name in self._scenarios.keys():
             self.run_scenario(name)
 
@@ -127,3 +136,9 @@ class Orchestrator(object):
             raise
 
         self._capture_path = output_path
+
+    def get_scenario_exceptions(self) -> list:
+        return self._scenario_exceptions
+
+    def clear_scenario_exceptions(self):
+        self._scenario_exceptions = []
