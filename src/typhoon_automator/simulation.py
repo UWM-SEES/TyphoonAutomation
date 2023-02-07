@@ -65,6 +65,7 @@ class Simulation(object):
 
             # Set up scenario
             self._automator.log("Initializing scenario")
+            self._schedule.clear_schedule()
             scenario.set_up_scenario(self)
 
             # Ensure valid scenario duration has been set
