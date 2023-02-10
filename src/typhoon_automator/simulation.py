@@ -65,6 +65,7 @@ class Simulation(object):
 
             # Set up scenario
             self._automator.log("Initializing scenario")
+            self._schedule.clear_schedule()
             scenario.set_up_scenario(self)
 
             # Ensure valid scenario duration has been set
@@ -88,7 +89,6 @@ class Simulation(object):
 
         except BaseException as ex:
             self._automator.log("Failed to initialize scenario", level = logging.CRITICAL)
-            self._automator.log_exception(ex)
             raise
 
     def finalize(
@@ -108,7 +108,6 @@ class Simulation(object):
 
         except BaseException as ex:
             self._automator.log("Failed to finalize scenario", level = logging.CRITICAL)
-            self._automator.log_exception(ex)
             raise
 
     def run(self):
@@ -204,8 +203,20 @@ class Simulation(object):
         
         except BaseException as ex:
           self._automator.log("Event invocation failed", level = logging.CRITICAL)
-          self._automator.log_exception(ex)
           raise
+
+    def force_stop(self):
+        """ Forcibly stop the simulation
+        
+        This method is intended for error handling purposes.  Normal operation should
+        not call this method
+        """
+        self._automator.log(f"Forcing simulation stop", level = logging.WARNING)
+
+        self.stop_simulation()
+        self.stop_capture(timeout = 3.0)
+        self.stop_data_logger()
+
 
     def start_simulation(self):
         """ Start the simulation
@@ -387,6 +398,10 @@ class Simulation(object):
             self._automator.log("No data logging signals, not starting", level = logging.WARNING)
             return
 
+        if len(self._data_logging_signals) == 0:
+            self._automator.log("No data signals to log", level = logging.WARNING)
+            return
+
         self._automator.log(f"Starting data logger, file {self._data_logging_filename}")
     
         if not hil.add_data_logger(
@@ -409,6 +424,9 @@ class Simulation(object):
         # TODO: Instead of this, use the data logger status to determine if logging needs to be stopped
         if not self._data_logging_filename:
             self._automator.log("No data logging filename, not stopping", level = logging.WARNING)
+            return
+
+        if len(self._data_logging_signals) == 0:
             return
 
         self._automator.log("Stopping data logger")
@@ -461,7 +479,6 @@ class Simulation(object):
             self._model.save_model_state(filename)
         except BaseException as ex:
             self._automator.log("Failed to save model state", level = logging.CRITICAL)
-            self._automator.log_exception(ex)
             raise
 
         if sim_running:
@@ -483,7 +500,6 @@ class Simulation(object):
             self._model.load_model_state(filename)
         except BaseException as ex:
             self._automator.log("Failed to load model state", level = logging.CRITICAL)
-            self._automator.log_exception(ex)
             raise
 
         if sim_running:

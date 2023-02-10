@@ -34,6 +34,8 @@ class Orchestrator(object):
         self._data_logging_path: str = None
         self._capture_path: str = None
 
+        self._scenario_exceptions: list = []
+
     def add_scenario(
             self,
             name: str,
@@ -68,10 +70,10 @@ class Orchestrator(object):
         if not (name in self._scenarios):
             raise KeyError(f"Scenario {name} does not exist")
 
-        data_log_filename = f"{datetime.now().strftime('%m%d%H%M%S')}-Data_{name}.csv"
+        data_log_filename = f"Data_{name}.csv"
         data_log_filename = str(Path(self._data_logging_path) / data_log_filename)
 
-        capture_filename = f"{datetime.now().strftime('%m%d%H%M%S')}-Capture_{name}.csv"
+        capture_filename = f"Capture_{name}.csv"
         capture_filename = str(Path(self._capture_path) / capture_filename)
 
         try:
@@ -84,13 +86,19 @@ class Orchestrator(object):
 
             self._simulation.initialize(scenario)
             self._simulation.run()
-            self._simulation.finalize(scenario)
 
         except BaseException as ex:
-            self._automator.log(f"Failed to run scenario {name}")
-            raise
+            self._automator.log(f"Failed to run scenario {name}", level = logging.ERROR)
+
+            # Store exception and force simulation stop
+            self._scenario_exceptions.append((name, ex))
+            self._simulation.force_stop()
+
+        finally:
+            self._simulation.finalize(scenario)
 
     def run_all(self):
+        self.clear_scenario_exceptions()
         for name in self._scenarios.keys():
             self.run_scenario(name)
 
@@ -107,6 +115,7 @@ class Orchestrator(object):
                 path.mkdir(parents = True, exist_ok = True)
         except:
             self._automator.log("Failed to create data logging path", level = logging.ERROR)
+            raise
         
         self._data_logging_path = output_path
 
@@ -123,5 +132,12 @@ class Orchestrator(object):
                 path.mkdir(parents = True, exist_ok = True)
         except:
             self._automator.log("Failed to create data logging path", level = logging.ERROR)
+            raise
 
         self._capture_path = output_path
+
+    def get_scenario_exceptions(self) -> list:
+        return self._scenario_exceptions
+
+    def clear_scenario_exceptions(self):
+        self._scenario_exceptions = []

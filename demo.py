@@ -62,6 +62,13 @@ try:
   
   # Run all the scenarios
   automator.run(use_vhil = use_vhil)
+
+  # Log all exceptions from failed scenarios
+  exceptions = automator.get_scenario_exceptions()
+  logger.info(f"Caught {len(exceptions)} scenario exceptions")
+  for ex in exceptions:
+    logger.info(f"Exception from {ex[0]}: {ex[1]}")
+
   
 except BaseException as ex:
   logger.critical("Exiting due to exception")
