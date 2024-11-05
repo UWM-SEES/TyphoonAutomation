@@ -1,6 +1,7 @@
 import typhoon.api.hil as hil
 import time
 import logging
+import random
 
 from datetime import datetime
 from datetime import timedelta
@@ -52,6 +53,8 @@ class Simulation(object):
         self._analog_capture_signals: list[str] = []
         self._digital_capture_signals: list[str] = []
         self._capture_filename: str = None
+
+        self._fault_num = random.randint(1,11)
 
     def initialize(
             self,
@@ -531,3 +534,15 @@ class Simulation(object):
             name: str,
             value: Any):
         self._model.set_scada_value(name = name, value = value)
+
+    def set_contactor(
+            self,
+            name: str,
+            swControl: bool,
+            swState: bool,
+            executeAt: Any=None):
+        self._model.set_contactor(name = name, swControl=swControl, swState=swState, executeAt=executeAt)
+
+    @property
+    def fault_num(self):
+        return self._fault_num
