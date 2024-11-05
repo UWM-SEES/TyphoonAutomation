@@ -1,7 +1,6 @@
 import typhoon.api.hil as hil
 import time
 import logging
-import random
 
 from datetime import datetime
 from datetime import timedelta
@@ -53,8 +52,6 @@ class Simulation(object):
         self._analog_capture_signals: list[str] = []
         self._digital_capture_signals: list[str] = []
         self._capture_filename: str = None
-
-        self._fault_num = random.randint(1,11)
 
     def initialize(
             self,
@@ -391,7 +388,7 @@ class Simulation(object):
             return
 
         self._automator.log(f"Starting data logger, file {self._data_logging_filename}")
-    
+
         if not hil.add_data_logger(
                 name = Simulation.DATA_LOGGER_NAME,
                 data_file = self._data_logging_filename,
@@ -542,7 +539,3 @@ class Simulation(object):
             swState: bool,
             executeAt: Any=None):
         self._model.set_contactor(name = name, swControl=swControl, swState=swState, executeAt=executeAt)
-
-    @property
-    def fault_num(self):
-        return self._fault_num

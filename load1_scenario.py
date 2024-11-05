@@ -15,9 +15,10 @@ class Load1Scenario(object):
             self,
             duration: float):
         self._duration = duration
+        self.fault_num = random.randint(1, 11)
 
-    def flip_switch(simulation: typhoon_automator.Simulation, swControl: bool, swState: bool):
-        match simulation.fault_num:
+    def flip_switch(self, simulation: typhoon_automator.Simulation, swControl: bool, swState: bool):
+        match self.fault_num:
             case 1:  # Line to Line (A to B)
                 simulation.set_contactor(Load1Scenario.AtoB, swControl, swState)
             case 2:  # Line to Line (B to C)
@@ -77,12 +78,12 @@ class Load1Scenario(object):
         simulation.set_contactor(Load1Scenario.CtoGnd, True, False)
 
         signals = [
-            "V( Battery inverter.Grid meas.Va )",
-            "V( Battery inverter.Grid meas.Vb )",
-            "V( Battery inverter.Grid meas.Vc )",
-            "I( Battery inverter.Ia )",
-            "I( Battery inverter.Ib )",
-            "I( Battery inverter.Ic )"
+            "Battery inverter.Va",
+            "Battery inverter.Vb",
+            "Battery inverter.Vc",
+            "Battery inverter.I_a",
+            "Battery inverter.I_b",
+            "Battery inverter.I_c"
         ]
 
         simulation.set_data_logging_signals(signals)
@@ -95,21 +96,21 @@ class Load1Scenario(object):
 
         # Create and schedule switch close and open events
         close_event = typhoon_automator.Utility.create_callback_event(
-            message = "Closing switch",
+            message = f"Closing switches case {simulation.fault_num}",
             callback = Load1Scenario.close_switch)
         close_time = random.uniform(CAPTURE_DURATION / 2, self._duration / 2)
 
         open_event = typhoon_automator.Utility.create_callback_event(
             message = "Opening switch",
             callback = Load1Scenario.open_switch)
-        open_time = random.uniform((self._duration / 2), self._duration - CAPTURE_DURATION)
+        open_time = random.uniform(close_time+0.0003, CAPTURE_DURATION+close_time)
 
         simulation.schedule_event(close_time, close_event)
         simulation.schedule_event(open_time, open_event)
 
         # Schedule a 100 millisecond capture starting 50 milliseconds before the switch opens
         simulation.schedule_capture(
-            start_time = open_time - (CAPTURE_DURATION / 2),
+            start_time = close_time - (CAPTURE_DURATION / 2),
             duration = CAPTURE_DURATION,
             decimation = 50)
 

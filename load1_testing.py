@@ -59,8 +59,8 @@ try:
     automator.set_capture_path(LOAD1_CAPTURE_PATH)
 
     # Add 16000 scenarios
-    for x in range(1, 16001):
-        time = capture_time*2 + random.randint(1, x)
+    for x in range(1, 10):
+        time = capture_time*2 + random.randint(1, 3)
         automator.add_scenario(name=f"Load 1 Scenario {x}", scenario=Load1Scenario(time))
 
 
