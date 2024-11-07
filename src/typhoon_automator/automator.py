@@ -234,6 +234,12 @@ class TyphoonAutomator(object):
         shutdown_time = datetime.now()
         self.log(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
 
+    def get_scenario_exceptions(self) -> list:
+        return self._orchestrator.get_scenario_exceptions()
+
+    def clear_scenario_exceptions(self):
+        self._orchestrator.clear_scenario_exceptions()
+
     def _create_hilsetup(self) -> HilSetupManager:
         return HilSetupManager(
             automator = self)
