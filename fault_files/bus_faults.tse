@@ -9,7 +9,7 @@ model "bus_faults" {
         hil_device = "HIL604"
         hil_configuration_id = 1
         simulation_method = exact
-        simulation_time_step = auto
+        simulation_time_step = 2e-6
         simulation_discret_scaling = 1.0
         dsp_timer_periods = 100e-6, 50e-3
         ss_calc_method = "systematic elimination"
@@ -31504,6 +31504,54 @@ else if(Ride_Through_State==4){
             }
             [
                 position = 9944, 7488
+            ]
+
+            component "core/Probe" Vc {
+                signal_access = "Inherit"
+                streaming_en = "True"
+            }
+            [
+                position = 9764, 7904
+            ]
+
+            component "core/Probe" Vb {
+                signal_access = "Inherit"
+                streaming_en = "True"
+            }
+            [
+                position = 9764, 7960
+            ]
+
+            component "core/Probe" Va {
+                signal_access = "Inherit"
+                streaming_en = "True"
+            }
+            [
+                position = 9764, 8020
+            ]
+
+            component "core/Probe" I_a {
+                signal_access = "Inherit"
+                streaming_en = "True"
+            }
+            [
+                position = 8496, 7688
+            ]
+
+            component "core/Probe" I_b {
+                signal_access = "Inherit"
+                streaming_en = "True"
+            }
+            [
+                position = 8496, 7784
+            ]
+
+            component "core/Probe" I_c {
+                signal_access = "Inherit"
+                streaming_en = "True"
+            }
+            [
+                position = 8492, 7884
             ]
 
             port A {

@@ -3,7 +3,7 @@ import random
 
 from src import typhoon_automator
 
-from load1_scenario import Load1Scenario as Load1Scenario
+from bus_scenario import BusScenario as BusScenario
 
 runs = 10
 
@@ -26,9 +26,9 @@ logger.addHandler(logger_console)
 logger.setLevel(HIL_LOG_LEVEL)
 
 # Set example information
-LOAD1_SCHEMATIC = "./fault_files/load1_faults.tse"
-LOAD1_DATA_LOG_PATH = "./output/data/"
-LOAD1_CAPTURE_PATH = "./output/capture/"
+Bus_SCHEMATIC = "./fault_files/bus_faults.tse"
+Bus_DATA_LOG_PATH = "./output/data/"
+Bus_CAPTURE_PATH = "./output/capture/"
 
 # Set up and run automator
 try:
@@ -52,20 +52,21 @@ try:
         logger.info("Using Virtual HIL")
 
     # Initialize the automator with the schematic
-    automator.initialize(LOAD1_SCHEMATIC, conditional_compile=True)
+    automator.initialize(Bus_SCHEMATIC, conditional_compile=True)
 
     capture_time = 1.0/60.0
 
     # Add data logging and capture paths
-    automator.set_data_logger_path(LOAD1_DATA_LOG_PATH)
-    automator.set_capture_path(LOAD1_CAPTURE_PATH)
+    automator.set_data_logger_path(Bus_DATA_LOG_PATH)
+    automator.set_capture_path(Bus_CAPTURE_PATH)
 
 
     # Add 16000 scenarios
-    for fault in range(0, 12):
-        for x in range(1, runs+1):
+    for fault in range(1, 12):
+        for x in range(1, runs + 1):
             time = 16
-            automator.add_scenario(name=f"Load 1 Scenario {x} Fault {fault}", scenario=Load1Scenario(time))
+            automator.add_scenario(name=f"Bus Scenario {x} Fault {fault}", scenario=BusScenario(time))
+
 
     # Run all the scenarios
     automator.run(use_vhil=use_vhil)

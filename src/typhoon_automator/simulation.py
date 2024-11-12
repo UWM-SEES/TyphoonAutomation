@@ -542,7 +542,7 @@ class Simulation(object):
             raise ValueError("Filename cannot be empty")
 
         self._capture_filename = filename
-        self._fault = filename.split("Fault ", 1)[1]
+        self._fault = (filename.split("Fault ", 1)[1]).split(".",1)[0]
 
     def set_scada_value(
             self,

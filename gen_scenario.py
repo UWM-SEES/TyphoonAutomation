@@ -2,13 +2,13 @@ from src import typhoon_automator
 import random
 
 # Create an example scenario
-class Load1Scenario(object):
-    AtoB = "AB - Load1"
-    BtoC = "BC - Load1"
-    AtoC = "AC - Load1"
-    AtoGnd = "AGND - Load1"
-    BtoGnd = "BGND - Load1"
-    CtoGnd = "CGND - Load1"
+class GenScenario(object):
+    AtoB = "AB - Gen"
+    BtoC = "BC - Gen"
+    AtoC = "AC - Gen"
+    AtoGnd = "AGND - Gen"
+    BtoGnd = "BGND - Gen"
+    CtoGnd = "CGND - Gen"
 
     def __init__(
             self,
@@ -43,51 +43,51 @@ class Load1Scenario(object):
         simulation.set_scada_value("PV_in.Q_ref", 0.0)
         simulation.set_scada_value("PV_in.V_ref", 480.0) \
         # Initialize switches as open
-        simulation.set_contactor(Load1Scenario.AtoB, True, False)
-        simulation.set_contactor(Load1Scenario.BtoC, True, False)
-        simulation.set_contactor(Load1Scenario.AtoC, True, False)
-        simulation.set_contactor(Load1Scenario.AtoGnd, True, False)
-        simulation.set_contactor(Load1Scenario.BtoGnd, True, False)
-        simulation.set_contactor(Load1Scenario.CtoGnd, True, False)
+        simulation.set_contactor(GenScenario.AtoB, True, False)
+        simulation.set_contactor(GenScenario.BtoC, True, False)
+        simulation.set_contactor(GenScenario.AtoC, True, False)
+        simulation.set_contactor(GenScenario.AtoGnd, True, False)
+        simulation.set_contactor(GenScenario.BtoGnd, True, False)
+        simulation.set_contactor(GenScenario.CtoGnd, True, False)
 
     def flip_switch(simulation: typhoon_automator.Simulation, swControl: bool, swState: bool):
         match int(simulation._fault):
             case 0: # No event
                 pass
             case 1:  # Line to Line (A to B)
-                simulation.set_contactor(Load1Scenario.AtoB, swControl, swState)
+                simulation.set_contactor(GenScenario.AtoB, swControl, swState)
             case 2:  # Line to Line (B to C)
-                simulation.set_contactor(Load1Scenario.BtoC, swControl, swState)
+                simulation.set_contactor(GenScenario.BtoC, swControl, swState)
             case 3:  # Line to Line (A to C)
-                simulation.set_contactor(Load1Scenario.AtoC, swControl, swState)
+                simulation.set_contactor(GenScenario.AtoC, swControl, swState)
             case 4:  # Line to Ground (A to Gnd)
-                simulation.set_contactor(Load1Scenario.AtoGnd, swControl, swState)
+                simulation.set_contactor(GenScenario.AtoGnd, swControl, swState)
             case 5:  # Line to Ground (B to Gnd)
-                simulation.set_contactor(Load1Scenario.BtoGnd, swControl, swState)
+                simulation.set_contactor(GenScenario.BtoGnd, swControl, swState)
             case 6:  # Line to Ground (C to Gnd)
-                simulation.set_contactor(Load1Scenario.CtoGnd, swControl, swState)
+                simulation.set_contactor(GenScenario.CtoGnd, swControl, swState)
             case 7:  # Line to Line to Ground (A to B to Gnd)
-                simulation.set_contactor(Load1Scenario.AtoB, swControl, swState)
-                simulation.set_contactor(Load1Scenario.AtoGnd, swControl, swState)
+                simulation.set_contactor(GenScenario.AtoB, swControl, swState)
+                simulation.set_contactor(GenScenario.AtoGnd, swControl, swState)
             case 8:  # Line to Line to Ground (B to C to Gnd)
-                simulation.set_contactor(Load1Scenario.BtoC, swControl, swState)
-                simulation.set_contactor(Load1Scenario.BtoGnd, swControl, swState)
+                simulation.set_contactor(GenScenario.BtoC, swControl, swState)
+                simulation.set_contactor(GenScenario.BtoGnd, swControl, swState)
             case 9:  # Line to Line to Ground (A to C to Gnd)
-                simulation.set_contactor(Load1Scenario.AtoC, swControl, swState)
-                simulation.set_contactor(Load1Scenario.AtoGnd, swControl, swState)
+                simulation.set_contactor(GenScenario.AtoC, swControl, swState)
+                simulation.set_contactor(GenScenario.AtoGnd, swControl, swState)
             case 10:  # Three Line (A to B to C)
-                simulation.set_contactor(Load1Scenario.AtoB, swControl, swState)
-                simulation.set_contactor(Load1Scenario.BtoC, swControl, swState)
+                simulation.set_contactor(GenScenario.AtoB, swControl, swState)
+                simulation.set_contactor(GenScenario.BtoC, swControl, swState)
             case 11:  # Three Line to Ground (A to B to C to Gnd)
-                simulation.set_contactor(Load1Scenario.AtoB, swControl, swState)
-                simulation.set_contactor(Load1Scenario.BtoC, swControl, swState)
-                simulation.set_contactor(Load1Scenario.CtoGnd, swControl, swState)
+                simulation.set_contactor(GenScenario.AtoB, swControl, swState)
+                simulation.set_contactor(GenScenario.BtoC, swControl, swState)
+                simulation.set_contactor(GenScenario.CtoGnd, swControl, swState)
 
     def close_switch(simulation: typhoon_automator.Simulation):
-        Load1Scenario.flip_switch(simulation,True,True)
+        GenScenario.flip_switch(simulation,True,True)
 
     def open_switch(simulation: typhoon_automator.Simulation):
-        Load1Scenario.flip_switch(simulation, True, False)
+        GenScenario.flip_switch(simulation, True, False)
 
     def enable_batt(simulation: typhoon_automator.Simulation):
         simulation.set_scada_value(name="Batt_in.On", value=1.0)
@@ -98,10 +98,10 @@ class Load1Scenario(object):
     def set_up_scenario(
             self,
             simulation: typhoon_automator.Simulation):
-        """ Set up the load1 scenaro
+        """ Set up the Gen scenaro
             First all necessary values are set up
         """
-        Load1Scenario.beginning_values(simulation)
+        GenScenario.beginning_values(simulation)
         signals = [
             "Battery inverter.Va",
             "Battery inverter.Vb",
@@ -122,23 +122,23 @@ class Load1Scenario(object):
         # Create and schedule switch close and open events
         close_event = typhoon_automator.Utility.create_callback_event(
             message = f"Closing switches case {simulation._fault}",
-            callback = Load1Scenario.close_switch)
+            callback = GenScenario.close_switch)
         close_time = random.uniform(11, 14)
 
         open_event = typhoon_automator.Utility.create_callback_event(
             message = "Opening switch",
-            callback = Load1Scenario.open_switch)
+            callback = GenScenario.open_switch)
         #open_time = random.uniform(close_time+0.003, CAPTURE_DURATION+close_time)
         open_time = 15
 
         enable_event = typhoon_automator.Utility.create_callback_event(
             message="Turning Battery On",
-            callback=Load1Scenario.enable_batt)
+            callback=GenScenario.enable_batt)
         enable_time = 3
 
         disable_event = typhoon_automator.Utility.create_callback_event(
             message="Turning Battery Off",
-            callback=Load1Scenario.disable_batt)
+            callback=GenScenario.disable_batt)
         disable_time = 15
 
         simulation.schedule_event(close_time, close_event)
