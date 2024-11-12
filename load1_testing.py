@@ -58,10 +58,11 @@ try:
     automator.set_data_logger_path(LOAD1_DATA_LOG_PATH)
     automator.set_capture_path(LOAD1_CAPTURE_PATH)
 
+    fault = 0
     # Add 16000 scenarios
-    for x in range(1, 10):
-        time = capture_time*2 + random.randint(1, 3)
-        automator.add_scenario(name=f"Load 1 Scenario {x}", scenario=Load1Scenario(time))
+    for x in range(1, 3):
+        time = 11
+        automator.add_scenario(name=f"Load 1 Scenario {x} Fault {fault}", scenario=Load1Scenario(time))
 
 
     # Run all the scenarios
