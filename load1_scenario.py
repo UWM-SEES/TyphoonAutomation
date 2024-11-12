@@ -10,15 +10,18 @@ class Load1Scenario(object):
     BtoGnd = "BGND - Load1"
     CtoGnd = "CGND - Load1"
 
-
     def __init__(
             self,
             duration: float):
         self._duration = duration
-        self.fault_num = random.randint(1, 11)
 
-    def flip_switch(self, simulation: typhoon_automator.Simulation, swControl: bool, swState: bool):
-        match self.fault_num:
+
+        #self.fault_num = random.randint(1, 11)
+
+    def flip_switch(simulation: typhoon_automator.Simulation, swControl: bool, swState: bool):
+        match simulation._fault:
+            case 0: # No event
+                pass
             case 1:  # Line to Line (A to B)
                 simulation.set_contactor(Load1Scenario.AtoB, swControl, swState)
             case 2:  # Line to Line (B to C)
@@ -54,20 +57,45 @@ class Load1Scenario(object):
     def open_switch(simulation: typhoon_automator.Simulation):
         Load1Scenario.flip_switch(simulation, True, False)
 
+    def enable_Load(simulation: typhoon_automator.Simulation):
+        #simulation.set_scada_value(name = "Batt_in.Pref", value = -20000.0)
+        simulation.set_scada_value(name="Batt_in.On", value=1.0)
+#
+    #def enable_ld(simulation: typhoon_automator.Simulation):
+    #    simulation.set_scada_value(name = "Batt_in.Pref", value = -200.0)
+#
+    def disable(simulation: typhoon_automator.Simulation):
+        #simulation.set_scada_value(name = "Batt_in.Pref", value = -20000.0)
+        simulation.set_scada_value(name="Batt_in.On", value=0.0)
+
     def set_up_scenario(
             self,
             simulation: typhoon_automator.Simulation):
         """ Set up the load1 scenaro
             First all necessary values are set up
         """
-        simulation.set_scada_value("Batt_in.On",1.0)
-        simulation.set_scada_value("Batt_in.Pref",-20000.0)
-        simulation.set_scada_value("Batt_in.Vref",480.0)
-        simulation.set_scada_value("Batt_in.f_ref",60.0)
-        simulation.set_scada_value("Batt_in.mode",1.0)
+        simulation.set_scada_value("Batt_in.Pref", -200000.0)
+        simulation.set_scada_value("Batt_in.On", 0.0)
+        simulation.set_scada_value("Batt_in.Qref", 0.0)
+        simulation.set_scada_value("Batt_in.Vref", 480.0)
+        simulation.set_scada_value("Batt_in.f_ref", 60.0)
+        simulation.set_scada_value("Batt_in.mode", 1.0)
+        simulation.set_scada_value("DG_in1.Gen_On", 1.0)
+        simulation.set_scada_value("DG_in1.Gen_OP_mode", 2.0)
+        simulation.set_scada_value("DG_in1.Gen_Control_Mode", 0.0)
+        simulation.set_scada_value("DG_in1.Load_share", 0.0)
+        simulation.set_scada_value("DG_in1.Load_share_on", 0.0)
+        simulation.set_scada_value("DG_in1.Pref", 0.0000096)
+        simulation.set_scada_value("DG_in1.pf_ref", 1.0)
+        simulation.set_scada_value("DG_in1.wref", 1.0)
+        simulation.set_scada_value("DG_in1.Vref", 1.0)
+        simulation.set_scada_value("PV_in.Connect", 0.0)
+        simulation.set_scada_value("PV_in.Enable", 0.0)
+        simulation.set_scada_value("PV_in.Irradiation", 200.0)
+        simulation.set_scada_value("PV_in.Q_mode", 1.0)
+        simulation.set_scada_value("PV_in.Q_ref", 0.0)
+        simulation.set_scada_value("PV_in.V_ref", 480.0)
 
-        simulation.set_scada_value("DG_in1.Gen_On",1.0)
-        simulation.set_scada_value("DG_in1.Gen_OP_mode",2.0)
 
         # Initialize switches as open
         simulation.set_contactor(Load1Scenario.AtoB, True, False)
@@ -96,23 +124,41 @@ class Load1Scenario(object):
 
         # Create and schedule switch close and open events
         close_event = typhoon_automator.Utility.create_callback_event(
-            message = f"Closing switches case {simulation.fault_num}",
+            message = f"Closing switches case {simulation._fault}",
             callback = Load1Scenario.close_switch)
-        close_time = random.uniform(CAPTURE_DURATION / 2, self._duration / 2)
+        close_time = random.uniform(4, 4.25)
 
         open_event = typhoon_automator.Utility.create_callback_event(
             message = "Opening switch",
             callback = Load1Scenario.open_switch)
         open_time = random.uniform(close_time+0.0003, CAPTURE_DURATION+close_time)
 
-        simulation.schedule_event(close_time, close_event)
-        simulation.schedule_event(open_time, open_event)
+        enable_event = typhoon_automator.Utility.create_callback_event(
+            message="Turning Battery On",
+            callback=Load1Scenario.enable_Load)
+        enable_time = 5
+#
+        #enable_event1 = typhoon_automator.Utility.create_callback_event(
+        #    message="Enabling Load",
+        #    callback=Load1Scenario.enable_ld)
+        #enable_time1 = 13
+#
+        enable_event2 = typhoon_automator.Utility.create_callback_event(
+            message="Turning Battery Off",
+            callback=Load1Scenario.disable)
+        enable_time2 = 10
+
+        #simulation.schedule_event(close_time, close_event)
+        #simulation.schedule_event(open_time, open_event)
+        simulation.schedule_event(enable_time, enable_event)
+        #simulation.schedule_event(enable_time1, enable_event1)
+        simulation.schedule_event(enable_time2, enable_event2)
 
         # Schedule a 100 millisecond capture starting 50 milliseconds before the switch opens
-        simulation.schedule_capture(
-            start_time = close_time - (CAPTURE_DURATION / 2),
-            duration = CAPTURE_DURATION,
-            decimation = 50)
+        #simulation.schedule_capture(
+        #    start_time = close_time - (CAPTURE_DURATION / 2),
+        #    duration = CAPTURE_DURATION,
+        #    decimation = 50)
 
         # Set scenario duration
         simulation.set_scenario_duration(self._duration)

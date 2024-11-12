@@ -23,6 +23,7 @@ class Simulation(object):
             self,
             automator,
             model: ModelManager):
+        self._fault = None
         from .automator import TyphoonAutomator
         from .automator import Utility
 
@@ -320,8 +321,8 @@ class Simulation(object):
             capture_digital]        # True to capture digital signals
 
         # TODO: Consider allowing the user to define a trigger, possibly use a trigger factory to build the settings
-        trigger_settings = [
-            "Forced"]
+        # TODO: Remove these trigger settings
+        trigger_settings = ["Analog",1,0.0,"Rising edge",50.0]
         
         channel_settings = [
             self._analog_capture_signals,
@@ -525,6 +526,7 @@ class Simulation(object):
             raise ValueError("Filename cannot be empty")
 
         self._capture_filename = filename
+        self._fault = filename.split("Fault ", 1)[1]
 
     def set_scada_value(
             self,
