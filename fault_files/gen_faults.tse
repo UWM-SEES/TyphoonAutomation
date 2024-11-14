@@ -4,7 +4,7 @@ version = 4.2
 // Saved by sw version: 2024.3
 //
 
-model "gen_faults" {
+model "bus_faults" {
     configuration {
         hil_device = "HIL604"
         hil_configuration_id = 1
@@ -12,7 +12,7 @@ model "gen_faults" {
         simulation_time_step = 2e-6
         simulation_discret_scaling = 1.0
         dsp_timer_periods = 100e-6, 50e-3
-        ss_calc_method = "systematic elimination"
+        ss_calc_method = "constraint matrix"
         enb_pole_shift = True
         enb_gds_oversampling = False
         show_modes = False
@@ -100,7 +100,7 @@ model "gen_faults" {
             pf_mode_3ph = "Lag"
         }
         [
-            position = 9652, 8556
+            position = 9576, 8568
             rotation = right
             scale = -1, 1
             size = 184, 152
@@ -140,37 +140,6 @@ model "gen_faults" {
                 position = 9448, 8320
                 scale = -1, 1
                 size = 64, 256
-            ]
-
-            component "core/Three Phase Wound Rotor Synchronous Machine" Gen {
-                Jm = "J"
-                Llfd = "Llfd_prime"
-                Llkd = "Llkd"
-                Llkq = "Llkq"
-                Lls = "Lls"
-                Lmd = "Lmd"
-                Lmq = "Lmq"
-                Ns_div_Nfd = "Ns_Nfd"
-                Ns_div_Nkd = "Ns_Nkd"
-                Ns_div_Nkq = "Ns_Nkq"
-                Rf = "Rf_prime"
-                Rkd = "Rkd"
-                Rkq = "Rkq"
-                Rs = "Rs"
-                el_torque_out_addr = "8200"
-                el_trq_out = "True"
-                execution_rate = "Ts"
-                friction_coeff = "F"
-                load_src = "Model"
-                me_speed_out_addr = "8202"
-                mech_speed_out = "True"
-                pms = "pms"
-                res_int_carr_f = "5000.0"
-            }
-            [
-                position = 8984, 8320
-                scale = -1, 1
-                size = 176, 160
             ]
 
             component Subsystem Control {
@@ -10668,6 +10637,35 @@ else{
                 position = 8888, 8112
             ]
 
+            component "core/Three Phase Wound Rotor Synchronous Machine with Neutral Connection" "3 ph WRSYNC N1" {
+                Jm = "J"
+                Llfd = "Llfd_prime"
+                Llkd = "Llkd"
+                Llkq = "Llkq"
+                Lls = "Lls"
+                Lmd = "Lmd"
+                Lmq = "Lmq"
+                Ns_div_Nfd = "Ns_Nfd"
+                Ns_div_Nkd = "Ns_Nkd"
+                Ns_div_Nkq = "Ns_Nkq"
+                Rf = "Rf_prime"
+                Rkd = "Rkd"
+                Rkq = "Rkq"
+                Rs = "Rs"
+                el_trq_out = "True"
+                execution_rate = "Ts"
+                friction_coeff = "F"
+                load_src = "Model"
+                mech_speed_out = "True"
+                pms = "pms"
+                signal_access = "Inherit"
+            }
+            [
+                position = 8976, 8312
+                scale = -1, 1
+                size = 176, 176
+            ]
+
             port A {
                 position = 180.0, -96.0
                 kind = pe
@@ -10727,40 +10725,34 @@ else{
                 rotation = left
             ]
 
-            junction Junction118 pe
+            port N {
+                position = 180.0, 80.0
+                kind = pe
+                direction =  out
+            }
             [
-                position = 8800, 8240
+                position = 9736, 8516
+                scale = -1, 1
             ]
 
-            junction Junction122 pe
+            junction Junction1 pe
             [
-                position = 8800, 8408
+                position = 8800, 8264
+            ]
+
+            junction Junction2 pe
+            [
+                position = 8784, 8368
             ]
 
             connect A Ggrid_meas.A as Connection669
             connect B Ggrid_meas.B as Connection670
             connect C Ggrid_meas.C as Connection671
-            connect Control.T_out Gen.load_in as Connection611
             connect Control.To_synch_check Sync_Check.From_Gen_Control as Connection673
-            connect Gen.r_2 Junction122 as Connection664
-            [
-                position = 0, 0
-                breakpoints = 8864, 8336; 8864, 8408
-            ]
-            connect Gen.c_in Measurements.c as Connection323
-            connect Gen.b_in Measurements.b as Connection318
-            connect Gen.a_in Measurements.a as Connection324
             connect Ggrid_meas.b MCB.b_in as Connection481
             connect Ggrid_meas.c MCB.c_in as Connection483
             connect Ggrid_meas.a MCB.a_in as Connection479
-            connect If.n_node Junction118 as Connection601
             connect Inputs Control.Inputs as Connection668
-            connect Junction118 Gen.r_1 as Connection600
-            [
-                position = 0, 0
-                breakpoints = 8864, 8240; 8864, 8304
-            ]
-            connect Junction122 Vfield.n_node as Connection665
             connect Measurements.Control_fb Control.Meas_feedback as Connection500
             connect Measurements.B MCB.b_out as Connection613
             connect Measurements.C MCB.c_out as Connection614
@@ -10772,15 +10764,20 @@ else{
             connect Sync_Check.V_gen Measurements.Sync_fb as Connection636
             connect Vfd.in Control.Vf_out as Connection649
             connect Vfd.p_node If.p_node as Connection663
-            connect Vfd.n_node Junction122 as Connection666
-            connect Vfield.p_node Junction118 as Connection599
-            connect Gen.out bus_split.in as Connection674
-            [
-                position = 0, 0
-                breakpoints = 8848, 8232; 8848, 8160
-            ]
             connect bus_split.out Control.T_in as Connection675
             connect bus_split.out1 Control.wmeas as Connection676
+            connect Measurements.a "3 ph WRSYNC N1.a_in" as Connection679
+            connect Measurements.b "3 ph WRSYNC N1.b_in" as Connection680
+            connect Measurements.c "3 ph WRSYNC N1.c_in" as Connection681
+            connect bus_split.in "3 ph WRSYNC N1.out" as Connection682
+            connect "3 ph WRSYNC N1.load_in" Control.T_out as Connection683
+            connect Vfield.p_node Junction1 as Connection684
+            connect Junction1 If.n_node as Connection685
+            connect "3 ph WRSYNC N1.r_1" Junction1 as Connection686
+            connect Vfd.n_node Junction2 as Connection687
+            connect Junction2 Vfield.n_node as Connection688
+            connect "3 ph WRSYNC N1.r_2" Junction2 as Connection689
+            connect N "3 ph WRSYNC N1.n_point" as Connection690
 
             F = "Genset_1.F"
             J = "Genset_1.J"
@@ -11558,7 +11555,7 @@ else{
             }
         }
         [
-            position = 7104, 8240
+            position = 7104, 8244
             size = 354, 240
         ]
 
@@ -11822,7 +11819,7 @@ else{
             resistance = "0.0027+0.002"
         }
         [
-            position = 7504, 8240
+            position = 7756, 8240
             size = 128, 256
         ]
 
@@ -11846,7 +11843,7 @@ else{
             gain = "IM.TmPerOmegaSquared"
         }
         [
-            position = 9512, 8072
+            position = 9532, 8068
             scale = -1, 1
         ]
 
@@ -31156,7 +31153,7 @@ else{
                 signal_access = "Inherit"
             }
             [
-                position = 8944, 7768
+                position = 9052, 7768
                 scale = -1, -1
             ]
 
@@ -31165,7 +31162,7 @@ else{
                 signal_access = "Inherit"
             }
             [
-                position = 8944, 7672
+                position = 9052, 7672
                 scale = -1, -1
             ]
 
@@ -31174,7 +31171,7 @@ else{
                 signal_access = "Inherit"
             }
             [
-                position = 8944, 7864
+                position = 9052, 7864
                 scale = -1, -1
             ]
 
@@ -31552,6 +31549,87 @@ else if(Ride_Through_State==4){
             }
             [
                 position = 8492, 7884
+            ]
+
+            component "core/Voltage Measurement" Vcap_cn {
+                execution_rate = "Ts"
+                sig_output = "True"
+                signal_access = "Inherit"
+            }
+            [
+                position = 8856, 8008
+                rotation = right
+                size = 64, 32
+            ]
+
+            component "core/Voltage Measurement" Vcap_bn {
+                execution_rate = "Ts"
+                sig_output = "True"
+                signal_access = "Inherit"
+            }
+            [
+                position = 8936, 7936
+                rotation = right
+                size = 64, 32
+            ]
+
+            component "core/Voltage Measurement" Vcap_an {
+                execution_rate = "Ts"
+                sig_output = "True"
+                signal_access = "Inherit"
+            }
+            [
+                position = 8972, 8048
+                rotation = right
+                size = 64, 32
+            ]
+
+            component "core/Probe" Vcap_b_n {
+                signal_access = "Inherit"
+                streaming_en = "True"
+            }
+            [
+                position = 9044, 7936
+            ]
+
+            component "core/Probe" Vcap_a_n {
+                signal_access = "Inherit"
+                streaming_en = "True"
+            }
+            [
+                position = 9052, 8048
+            ]
+
+            component "core/Probe" Vcap_c_n {
+                signal_access = "Inherit"
+                streaming_en = "True"
+            }
+            [
+                position = 9048, 7992
+            ]
+
+            component "core/Probe" Ia_out_ {
+                signal_access = "Inherit"
+                streaming_en = "True"
+            }
+            [
+                position = 9340, 7588
+            ]
+
+            component "core/Probe" Ib_out_ {
+                signal_access = "Inherit"
+                streaming_en = "True"
+            }
+            [
+                position = 9392, 7792
+            ]
+
+            component "core/Probe" Ic_out_ {
+                signal_access = "Inherit"
+                streaming_en = "True"
+            }
+            [
+                position = 9396, 7900
             ]
 
             port A {
@@ -32345,27 +32423,72 @@ else if(Ride_Through_State==4){
 
             junction Junction204 sp
             [
-                position = 9616, 7904
+                position = 9616, 7900
             ]
 
             junction Junction205 sp
             [
-                position = 9592, 7904
-            ]
-
-            junction Junction206 sp
-            [
-                position = 8444, 7640
+                position = 9592, 7900
             ]
 
             junction Junction207 sp
             [
-                position = 8444, 7736
+                position = 8440, 7736
             ]
 
             junction Junction208 sp
             [
-                position = 8440, 7832
+                position = 8440, 7640
+            ]
+
+            junction Junction209 sp
+            [
+                position = 8436, 7832
+            ]
+
+            junction Junction210 pe
+            [
+                position = 8776, 8104
+            ]
+
+            junction Junction211 pe
+            [
+                position = 8860, 7864
+            ]
+
+            junction Junction212 pe
+            [
+                position = 8952, 7768
+            ]
+
+            junction Junction213 pe
+            [
+                position = 8856, 8092
+            ]
+
+            junction Junction214 pe
+            [
+                position = 8968, 8092
+            ]
+
+            junction Junction215 pe
+            [
+                position = 9008, 7672
+            ]
+
+            junction Junction216 sp
+            [
+                position = 9316, 7640
+            ]
+
+            junction Junction217 sp
+            [
+                position = 9340, 7840
+            ]
+
+            junction Junction218 sp
+            [
+                position = 9344, 7736
             ]
 
             connect A "Grid meas.a" as Connection2714
@@ -32402,10 +32525,7 @@ else if(Ride_Through_State==4){
             connect From212 Output.Connected as Connection2755
             connect From213 "Three Phase Inverter1.InA" as Connection2769
             connect From215 "Three Phase Inverter1.InC" as Connection2771
-            connect Goto100 Ib_out.out as Connection2778
             connect Goto93 Control.m_b as Connection2796
-            connect Goto98 Ia_out.out as Connection2779
-            connect Goto99 Ic_out.out as Connection2780
             connect "Grid meas.C" S1.c_out as Connection2711
             connect "Grid meas.A" S1.a_out as Connection2715
             connect "Grid meas.B" S1.b_out as Connection2713
@@ -32421,7 +32541,6 @@ else if(Ride_Through_State==4){
             connect Ic_out.n_node S1.c_in as Connection2783
             connect Idc_link.n_node "Three Phase Inverter1.pos_out" as Connection18
             connect Inputs Control_Inputs.Inputs as Connection2496
-            connect Junction10 Cfc.n_node as Connection2689
             connect Junction129 Ra.p_node as Connection34
             connect Junction130 Rc.p_node as Connection35
             connect Junction150 Idc_link.p_node as Connection161
@@ -32465,11 +32584,8 @@ else if(Ride_Through_State==4){
             connect From216 Control.Ib_out as Connection2810
             connect From218 Control.Ia_out as Connection2811
             connect "Converter meas.B" Lb2.p_node as Connection2812
-            connect Lb2.n_node Junction199 as Connection2813
             connect "Converter meas.A" La2.p_node as Connection2814
-            connect La2.n_node Junction200 as Connection2815
             connect "Converter meas.C" Lc2.p_node as Connection2816
-            connect Lc2.n_node Junction198 as Connection2817
             connect Gain4.in "RMS value1.out" as Connection805
             connect "RMS value1.in" From40 as Connection2819
             connect FaultReset_Ridethrgh.out Ride_Through_State_Machine.FaultReset as Connection2821
@@ -32498,23 +32614,78 @@ else if(Ride_Through_State==4){
             connect Junction202 Ride_Through_State_Machine.Input_Voltage as Connection2838
             connect Vin_RMS_BESS.in Junction202 as Connection2839
             connect "Grid meas.VC" Junction203 as Connection2840
+            [
+                breakpoints = 9640, 7896
+            ]
             connect Junction203 Goto89 as Connection2841
+            [
+                breakpoints = 9640, 7912
+            ]
             connect Vc.in Junction203 as Connection2842
+            [
+                breakpoints = 9732, 7904; 9640, 7904
+            ]
             connect "Grid meas.VB" Junction204 as Connection2843
             connect Junction204 Goto90 as Connection2844
             connect Vb.in Junction204 as Connection2845
+            [
+                breakpoints = 9732, 7892; 9616, 7892
+            ]
             connect "Grid meas.VA" Junction205 as Connection2846
             connect Junction205 Goto91 as Connection2847
             connect Va.in Junction205 as Connection2848
-            connect Goto86 Junction206 as Connection2849
-            connect Junction206 Ia.out as Connection2850
-            connect I_a.in Junction206 as Connection2851
+            [
+                breakpoints = 9564, 8020; 9564, 7900
+            ]
             connect Goto87 Junction207 as Connection2852
             connect Junction207 Ib.out as Connection2853
             connect I_b.in Junction207 as Connection2854
-            connect Goto88 Junction208 as Connection2855
-            connect Junction208 Ic.out as Connection2856
-            connect I_c.in Junction208 as Connection2857
+            [
+                breakpoints = 8404, 7784; 8404, 7736
+            ]
+            connect Goto86 Junction208 as Connection2855
+            connect Junction208 Ia.out as Connection2856
+            connect I_a.in Junction208 as Connection2857
+            [
+                breakpoints = 8400, 7688; 8400, 7640
+            ]
+            connect Goto88 Junction209 as Connection2859
+            connect Junction209 Ic.out as Connection2860
+            connect I_c.in Junction209 as Connection2861
+            [
+                breakpoints = 8412, 7884; 8412, 7832
+            ]
+            connect Junction10 Junction210 as Connection2862
+            connect Junction210 Cfc.n_node as Connection2863
+            connect Lc2.n_node Junction211 as Connection2865
+            connect Junction211 Junction198 as Connection2866
+            connect Vcap_cn.p_node Junction211 as Connection2867
+            connect Lb2.n_node Junction212 as Connection2868
+            connect Junction212 Junction199 as Connection2869
+            connect Vcap_bn.p_node Junction212 as Connection2870
+            connect Vcap_cn.n_node Junction213 as Connection2871
+            connect Junction213 Junction210 as Connection2872
+            connect Vcap_bn.n_node Junction214 as Connection2874
+            connect Junction214 Junction213 as Connection2875
+            connect Vcap_an.n_node Junction214 as Connection2876
+            connect La2.n_node Junction215 as Connection2877
+            connect Junction215 Junction200 as Connection2878
+            connect Vcap_an.p_node Junction215 as Connection2879
+            connect Vcap_bn.out Vcap_b_n.in as Connection2880
+            [
+                breakpoints = 9020, 7936
+            ]
+            connect Vcap_an.out Vcap_a_n.in as Connection2881
+            connect Vcap_c_n.in Vcap_cn.out as Connection2882
+            connect Goto98 Junction216 as Connection2883
+            connect Junction216 Ia_out.out as Connection2884
+            connect Ia_out_.in Junction216 as Connection2885
+            connect Goto99 Junction217 as Connection2886
+            connect Junction217 Ic_out.out as Connection2887
+            connect Ic_out_.in Junction217 as Connection2888
+            connect Goto100 Junction218 as Connection2889
+            connect Junction218 Ib_out.out as Connection2890
+            connect Ib_out_.in Junction218 as Connection2891
 
             Cdm = "5.1169e-04"
             L2 = "1.3751e-04"
@@ -33060,18 +33231,6 @@ else if(Ride_Through_State==4){
             size = 48, 48
         ]
 
-        component "core/Three Phase Core Coupling" "Core Coupling3" {
-            C1 = "0.75e-05"
-            R1 = "2.5"
-            fixed_snb_i = "true"
-            snb_type_i = "R1-C1"
-        }
-        [
-            position = 8072, 8248
-            scale = -1, 1
-            size = 12, 256
-        ]
-
         component "core/Three Phase Core Coupling" "Core Coupling4" {
             C1 = "0.75e-05"
             R1 = "2.5"
@@ -33162,7 +33321,7 @@ else if(Ride_Through_State==4){
             resistance = "0.001"
         }
         [
-            position = 7968, 8248
+            position = 7976, 8240
             size = 128, 256
         ]
 
@@ -33186,6 +33345,15 @@ else if(Ride_Through_State==4){
         [
             position = 9360, 7872
             size = 128, 256
+        ]
+
+        component "core/Single Pole Single Throw Contactor" "AB - Gen" {
+            signal_access = "Inherit"
+        }
+        [
+            position = 7496, 8196
+            rotation = right
+            size = 64, 32
         ]
 
         component Subsystem "Power meter Load 3" {
@@ -33967,7 +34135,7 @@ else if(Ride_Through_State==4){
             connect Sum1.out S_RMS.in as Connection1394
         }
         [
-            position = 9408, 8580
+            position = 9064, 8576
             scale = -1, 1
             size = 80, 240
         ]
@@ -34751,7 +34919,7 @@ else if(Ride_Through_State==4){
             connect S_RMS.in Sum1.out as Connection1394
         }
         [
-            position = 9320, 8264
+            position = 9044, 8260
             scale = -1, 1
             size = 80, 240
         ]
@@ -35645,7 +35813,7 @@ else if(Ride_Through_State==4){
             connect Sum1.out S_RMS.in as Connection1407
         }
         [
-            position = 9768, 7880
+            position = 9600, 7876
             scale = -1, 1
             size = 80, 240
         ]
@@ -35671,58 +35839,66 @@ else if(Ride_Through_State==4){
             size = 144, 160
         ]
 
-        component "core/Single Pole Single Throw Contactor" "AGND - Gen" {
-        }
-        [
-            position = 8864, 8536
-            rotation = right
-            size = 64, 32
-        ]
-
-        component "core/Single Pole Single Throw Contactor" "BGND - Gen" {
-        }
-        [
-            position = 9000, 8628
-            rotation = right
-            size = 64, 32
-        ]
-
-        component "core/Single Pole Single Throw Contactor" "CGND - Gen" {
-        }
-        [
-            position = 9016, 8732
-            rotation = right
-            size = 64, 32
-        ]
-
-        component "core/Ground" gnd3 {
-        }
-        [
-            position = 9012, 8812
-        ]
-
-        component "core/Single Pole Single Throw Contactor" "AB - Gen" {
-        }
-        [
-            position = 7668, 8192
-            rotation = right
-            size = 64, 32
-        ]
-
         component "core/Single Pole Single Throw Contactor" "BC - Gen" {
+            signal_access = "Inherit"
         }
         [
-            position = 7712, 8288
+            position = 7544, 8296
             rotation = right
             size = 64, 32
         ]
 
         component "core/Single Pole Single Throw Contactor" "AC - Gen" {
+            signal_access = "Inherit"
         }
         [
-            position = 7780, 8192
+            position = 7612, 8204
             rotation = right
             size = 64, 32
+        ]
+
+        component "core/Single Pole Single Throw Contactor" "AGND - Gen" {
+            signal_access = "Inherit"
+        }
+        [
+            position = 8892, 7812
+            rotation = right
+            size = 64, 32
+        ]
+
+        component "core/Single Pole Single Throw Contactor" "BGND - Gen" {
+            signal_access = "Inherit"
+        }
+        [
+            position = 9028, 7932
+            rotation = right
+            size = 64, 32
+        ]
+
+        component "core/Single Pole Single Throw Contactor" "CGND - Gen" {
+            signal_access = "Inherit"
+        }
+        [
+            position = 9044, 8012
+            rotation = right
+            size = 64, 32
+        ]
+
+        component "core/Ground" gnd1 {
+        }
+        [
+            position = 8872, 8128
+        ]
+
+        component "core/Four Phase Core Coupling" "Core Coupling 1" {
+            C1 = "7.5e-06"
+            R1 = "2.5"
+            snb_type_i = "R1-C1"
+        }
+        [
+            position = 8216, 8284
+            scale = -1, 1
+            size = 12, 352
         ]
 
         junction Junction6 sp
@@ -35755,6 +35931,16 @@ else if(Ride_Through_State==4){
             position = 9488, 8152
         ]
 
+        junction Junction34 pe
+        [
+            position = 9044, 8064
+        ]
+
+        junction Junction37 pe
+        [
+            position = 8936, 8064
+        ]
+
         junction Junction38 pe
         [
             position = 8540, 8944
@@ -35770,9 +35956,9 @@ else if(Ride_Through_State==4){
             position = 8540, 8168
         ]
 
-        junction Junction42 pe
+        junction Junction41 pe
         [
-            position = 8540, 8152
+            position = 8892, 7776
         ]
 
         junction Junction43 pe
@@ -35790,14 +35976,9 @@ else if(Ride_Through_State==4){
             position = 8612, 8264
         ]
 
-        junction Junction46 pe
+        junction Junction48 pe
         [
-            position = 8612, 8244
-        ]
-
-        junction Junction49 pe
-        [
-            position = 8696, 8344
+            position = 9044, 7968
         ]
 
         junction Junction50 pe
@@ -35815,59 +35996,59 @@ else if(Ride_Through_State==4){
             position = 8696, 9136
         ]
 
+        junction Junction53 pe
+        [
+            position = 9028, 7872
+        ]
+
+        junction Junction54 pe
+        [
+            position = 8872, 8092
+        ]
+
+        junction Junction55 pe
+        [
+            position = 8540, 8140
+        ]
+
+        junction Junction56 pe
+        [
+            position = 8612, 8288
+        ]
+
+        junction Junction57 pe
+        [
+            position = 8696, 8392
+        ]
+
+        junction Junction58 pe
+        [
+            position = 7544, 8244
+        ]
+
         junction Junction59 pe
         [
-            position = 9008, 8788
+            position = 7544, 8340
         ]
 
         junction Junction60 pe
         [
-            position = 8984, 8788
+            position = 7612, 8340
         ]
 
         junction Junction61 pe
         [
-            position = 9020, 8676
+            position = 7612, 8148
         ]
 
         junction Junction62 pe
         [
-            position = 9000, 8580
+            position = 7500, 8148
         ]
 
         junction Junction63 pe
         [
-            position = 8864, 8484
-        ]
-
-        junction Junction64 pe
-        [
-            position = 7712, 8240
-        ]
-
-        junction Junction65 pe
-        [
-            position = 7712, 8336
-        ]
-
-        junction Junction66 pe
-        [
-            position = 7668, 8240
-        ]
-
-        junction Junction67 pe
-        [
-            position = 7668, 8144
-        ]
-
-        junction Junction68 pe
-        [
-            position = 7780, 8144
-        ]
-
-        junction Junction69 pe
-        [
-            position = 7776, 8336
+            position = 7500, 8244
         ]
 
         connect DG_in1.inputs Diesel_Gen1.Inputs as Connection859
@@ -35901,21 +36082,6 @@ else if(Ride_Through_State==4){
         connect "Xfmr BESS.prm_1" "Core Coupling5.a_out" as Connection1209
         connect "Battery inverter.DCpos" Battery1.p_node as Connection1267
         connect Battery1.n_node "Battery inverter.DCneg" as Connection1268
-        connect Diesel_Gen1.A "Series RLC Branch1.P1_pos" as Connection1286
-        connect Diesel_Gen1.B "Series RLC Branch1.P2_pos" as Connection1287
-        connect Diesel_Gen1.C "Series RLC Branch1.P3_pos" as Connection1288
-        connect "Series RLC Branch5.P1_neg" "Core Coupling3.a_out" as Connection1304
-        connect "Series RLC Branch5.P2_neg" "Core Coupling3.b_out" as Connection1305
-        connect "Series RLC Branch5.P3_neg" "Core Coupling3.c_out" as Connection1306
-        connect "Power meter Load 3.W" Load3.C as Connection1340
-        connect "Power meter Load 3.V" Load3.B as Connection1342
-        connect "Power meter Load 3.U" Load3.A as Connection1344
-        connect "Power meter IM.W" "3 ph IM1.c_in" as Connection1348
-        connect "Power meter IM.V" "3 ph IM1.b_in" as Connection1349
-        connect "Power meter IM.U" "3 ph IM1.a_in" as Connection1350
-        connect "Power meter Load 4.U" "Load 1.A" as Connection1360
-        connect "Power meter Load 4.V" "Load 1.B" as Connection1361
-        connect "Power meter Load 4.W" "Load 1.C" as Connection1362
         connect "IM Mech Speed.in" Junction27 as Connection1363
         connect Junction27 Junction8 as Connection1364
         connect Product2.in Junction27 as Connection1365
@@ -35932,6 +36098,10 @@ else if(Ride_Through_State==4){
         connect "Core Coupling6.a_out" "Series RLC Branch6.P1_pos" as Connection1418
         connect "Series RLC Branch6.P2_pos" "Core Coupling6.b_out" as Connection1419
         connect "Core Coupling6.c_out" "Series RLC Branch6.P3_pos" as Connection1420
+        connect "CGND - Gen.a_out" Junction34 as Connection1437
+        connect "BGND - Gen.a_out" Junction37 as Connection1446
+        connect Junction37 Junction34 as Connection1447
+        connect "AGND - Gen.a_out" Junction37 as Connection1448
         connect "Core Coupling5.a_in" Junction38 as Connection1453
         [
             breakpoints = 8540, 9456
@@ -35941,12 +36111,16 @@ else if(Ride_Through_State==4){
             breakpoints = 8540, 8944
         ]
         connect Junction39 Junction38 as Connection1457
+        connect "Power meter IM.A" Junction40 as Connection1459
+        [
+            breakpoints = 8992, 8168
+        ]
         connect Junction40 Junction39 as Connection1460
         [
             breakpoints = 8540, 8168
         ]
-        connect Junction42 Junction40 as Connection1466
-        connect "Core Coupling3.a_in" Junction42 as Connection1467
+        connect "Core Coupling6.a_in" Junction41 as Connection1462
+        connect "AGND - Gen.a_in" Junction41 as Connection1464
         connect "Core Coupling5.b_in" Junction43 as Connection1469
         [
             breakpoints = 8612, 9552
@@ -35956,68 +36130,90 @@ else if(Ride_Through_State==4){
             breakpoints = 8612, 9040
         ]
         connect Junction44 Junction43 as Connection1473
-        connect Junction45 Junction44 as Connection1476
-        connect Junction46 Junction45 as Connection1479
-        connect "Core Coupling3.b_in" Junction46 as Connection1480
-        connect "Core Coupling3.c_in" Junction49 as Connection1490
-        connect Junction49 Junction50 as Connection1491
-        connect Junction51 Junction50 as Connection1495
-        connect "Core Coupling4.c_in" Junction52 as Connection1497
-        connect Junction52 Junction51 as Connection1498
-        connect "Core Coupling5.c_in" Junction52 as Connection1499
-        connect Junction49 "Core Coupling6.c_in" as Connection1503
-        [
-            breakpoints = 8696, 7968
-        ]
-        connect "Series RLC Branch6.P3_neg" "Power meter Load 4.C" as Connection1504
-        connect Junction46 "Core Coupling6.b_in" as Connection1505
-        [
-            breakpoints = 8612, 7872; 8992, 7872
-        ]
-        connect "Power meter Load 4.B" "Series RLC Branch6.P2_neg" as Connection1500
-        [
-            breakpoints = 9544, 7872
-        ]
-        connect "Series RLC Branch6.P1_neg" "Power meter Load 4.A" as Connection1501
-        connect "Core Coupling6.a_in" Junction42 as Connection1502
-        connect "Power meter IM.C" Junction50 as Connection1540
+        connect "Power meter IM.B" Junction45 as Connection1475
+        connect "Core Coupling6.c_in" Junction48 as Connection1485
+        connect "CGND - Gen.a_in" Junction48 as Connection1487
+        connect Junction50 "Power meter IM.C" as Connection1492
         [
             breakpoints = 8696, 8360
         ]
-        connect "Power meter IM.A" Junction40 as Connection1541
+        connect "Core Coupling4.c_in" Junction52 as Connection1497
+        connect Junction52 Junction51 as Connection1498
+        connect "Core Coupling5.c_in" Junction52 as Connection1499
+        connect "BGND - Gen.a_in" Junction53 as Connection1507
+        connect Junction53 "Core Coupling6.b_in" as Connection1508
+        connect "Core Coupling 1.d_out" Diesel_Gen1.N as Connection1515
         [
-            breakpoints = 8992, 8168
+            breakpoints = 7348, 8436; 7404, 8320; 7404, 8272; 7300, 8272
         ]
-        connect "Power meter IM.B" Junction45 as Connection1542
-        connect Junction59 gnd3.node as Connection1563
-        connect "CGND - Gen.a_out" Junction59 as Connection1564
-        connect "AGND - Gen.a_out" Junction60 as Connection1565
-        connect Junction60 Junction59 as Connection1566
-        connect "BGND - Gen.a_out" Junction60 as Connection1567
-        connect Junction61 Junction51 as Connection1569
-        connect "CGND - Gen.a_in" Junction61 as Connection1570
-        connect Junction62 Junction44 as Connection1572
-        connect "BGND - Gen.a_in" Junction62 as Connection1573
-        connect Junction63 Junction39 as Connection1575
-        connect "AGND - Gen.a_in" Junction63 as Connection1576
-        connect "Power meter Load 3.C" Junction61 as Connection1578
-        connect "Power meter Load 3.B" Junction62 as Connection1577
-        connect Junction63 "Power meter Load 3.A" as Connection1579
-        connect Junction64 "Series RLC Branch5.P2_pos" as Connection1581
-        connect "BC - Gen.a_in" Junction64 as Connection1582
-        connect "Series RLC Branch1.P3_neg" Junction65 as Connection1583
-        connect "BC - Gen.a_out" Junction65 as Connection1585
-        connect "Series RLC Branch1.P2_neg" Junction66 as Connection1586
-        connect Junction66 Junction64 as Connection1587
-        connect "AB - Gen.a_out" Junction66 as Connection1588
-        connect "Series RLC Branch1.P1_neg" Junction67 as Connection1589
-        connect "AB - Gen.a_in" Junction67 as Connection1591
-        connect Junction67 Junction68 as Connection1592
-        connect Junction68 "Series RLC Branch5.P1_pos" as Connection1593
-        connect "AC - Gen.a_in" Junction68 as Connection1594
-        connect Junction65 Junction69 as Connection1595
-        connect Junction69 "Series RLC Branch5.P3_pos" as Connection1596
-        connect "AC - Gen.a_out" Junction69 as Connection1597
+        connect Junction54 gnd1.node as Connection1517
+        connect "Core Coupling 1.d_in" Junction54 as Connection1518
+        connect Junction53 Junction45 as Connection1547
+        [
+            breakpoints = 8992, 7872; 8612, 7872
+        ]
+        connect Junction50 Junction48 as Connection1548
+        [
+            breakpoints = 8696, 7968
+        ]
+        connect "Series RLC Branch5.P1_pos" "Series RLC Branch1.P1_neg" as Connection1549
+        connect "Series RLC Branch5.P2_pos" "Series RLC Branch1.P2_neg" as Connection1550
+        connect "Series RLC Branch5.P3_pos" "Series RLC Branch1.P3_neg" as Connection1551
+        connect "Series RLC Branch5.P1_neg" "Core Coupling 1.a_out" as Connection1552
+        connect "Series RLC Branch5.P2_neg" "Core Coupling 1.b_out" as Connection1553
+        connect "Series RLC Branch5.P3_neg" "Core Coupling 1.c_out" as Connection1554
+        connect Junction40 Junction55 as Connection1555
+        connect "Core Coupling 1.a_in" Junction55 as Connection1557
+        connect Junction45 Junction56 as Connection1558
+        connect Junction56 Junction44 as Connection1559
+        connect "Core Coupling 1.b_in" Junction56 as Connection1560
+        connect Junction51 Junction57 as Connection1561
+        connect Junction57 Junction50 as Connection1562
+        connect "Core Coupling 1.c_in" Junction57 as Connection1563
+        connect Junction41 Junction55 as Connection1570
+        [
+            breakpoints = 8540, 7776
+        ]
+        connect Junction34 Junction54 as Connection1571
+        connect "Power meter Load 4.B" "Series RLC Branch6.P2_neg" as Connection1573
+        [
+            breakpoints = 9544, 7872
+        ]
+        connect "Series RLC Branch6.P1_neg" "Power meter Load 4.A" as Connection1572
+        connect "Power meter Load 4.C" "Series RLC Branch6.P3_neg" as Connection1574
+        connect "Load 1.A" "Power meter Load 4.U" as Connection1593
+        connect "Power meter Load 4.V" "Load 1.B" as Connection1595
+        connect "Power meter Load 4.W" "Load 1.C" as Connection1594
+        connect "3 ph IM1.b_in" "Power meter IM.V" as Connection1615
+        [
+            breakpoints = 9416, 8276; 9100, 8276
+        ]
+        connect "3 ph IM1.a_in" "Power meter IM.U" as Connection1614
+        [
+            breakpoints = 9416, 8164; 9100, 8164
+        ]
+        connect "Power meter IM.W" "3 ph IM1.c_in" as Connection1616
+        connect "Power meter Load 3.W" Load3.C as Connection1635
+        connect Load3.A "Power meter Load 3.U" as Connection1636
+        connect "Power meter Load 3.V" Load3.B as Connection1637
+        connect "Power meter Load 3.A" Junction39 as Connection1657
+        connect Junction51 "Power meter Load 3.C" as Connection1658
+        connect "Power meter Load 3.B" Junction44 as Connection1656
+        connect Junction58 "Series RLC Branch1.P2_pos" as Connection1660
+        connect "BC - Gen.a_in" Junction58 as Connection1661
+        connect Diesel_Gen1.C Junction59 as Connection1662
+        connect "BC - Gen.a_out" Junction59 as Connection1664
+        connect Junction59 Junction60 as Connection1665
+        connect Junction60 "Series RLC Branch1.P3_pos" as Connection1666
+        connect "AC - Gen.a_out" Junction60 as Connection1667
+        connect Junction61 "Series RLC Branch1.P1_pos" as Connection1669
+        connect "AC - Gen.a_in" Junction61 as Connection1670
+        connect Diesel_Gen1.A Junction62 as Connection1671
+        connect Junction62 Junction61 as Connection1672
+        connect "AB - Gen.a_in" Junction62 as Connection1673
+        connect Diesel_Gen1.B Junction63 as Connection1674
+        connect Junction63 Junction58 as Connection1675
+        connect "AB - Gen.a_out" Junction63 as Connection1676
     }
 
     logically_deleted {
@@ -36398,6 +36594,20 @@ else if(Ride_Through_State==4){
             execution_rate = "inherit"
         }
 
+        "core/Four Phase Core Coupling" {
+            snb_type_i = "none"
+            R1 = "100e3"
+            C1 = "1e-06"
+            C2 = "1e-06"
+            fixed_snb_i = "false"
+            snb_type_u = "none"
+            R2 = "0.1"
+            L1 = "0.1"
+            L2 = "0.1"
+            fixed_snb_u = "false"
+            cpl_connection = "star"
+        }
+
         "core/Series RLC Branch" {
             num_phases = "Single-Phase"
             branch_type = "RLC"
@@ -36630,37 +36840,22 @@ else if(Ride_Through_State==4){
             Rshunt = "inf"
         }
 
-        "core/Three Phase Wound Rotor Synchronous Machine" {
+        "core/Three Phase Wound Rotor Synchronous Machine with Neutral Connection" {
             signal_access = "inherit"
-            model_type = "linear"
-            rated_speed = "1.0"
-            double_q_windings = "1 damper winding on q axis"
             Rs = "1.62"
             Lls = "0.004527"
             Lmd = "0.1086"
             Lmq = "0.1086"
-            curve_type = "no load curve"
-            if_vector = "[0.0, 0.0]"
-            vs_vector = "[0.0, 0.0]"
-            imd_vector = "[0.0, 0.0]"
-            imq_vector = "[0.0, 0.0]"
-            psimd_table = "[[0.0, 0.0], [0.0, 0.0]]"
-            psimq_table = "[[0.0, 0.0], [0.0, 0.0]]"
             Rf = "1.208"
             Llfd = "0.01132"
             Rkd = "3.142"
             Rkq = "4.772"
-            Rkq2 = "1e5"
             Llkd = "0.007334"
             Llkq = "0.01015"
-            Llkq2 = "1e-11"
             Ns_div_Nfd = "1.0"
             Ns_div_Nkd = "1.0"
             Ns_div_Nkq = "1.0"
-            Lc = "0"
-            visualize_luts = "Visualize Lookup Tables"
             pms = "2"
-            star_delta = "star"
             Jm = "0.0923"
             friction_coeff = "0"
             unconstrained_angle = "disabled"
@@ -36694,7 +36889,6 @@ else if(Ride_Through_State==4){
             ssi_clock_di_logic = "active high"
             ssi_data_di_addr = "2"
             theta_ab = "-pi/2"
-            field_input = "voltage"
             Rsnb_rotor = "inf"
             Rsnb_stator = "inf"
             execution_rate = "100e-6"
@@ -36703,13 +36897,12 @@ else if(Ride_Through_State==4){
             mech_angle_out = "False"
             i_als = "False"
             i_bes = "False"
+            i_abos = "False"
             i_ds = "False"
             i_qs = "False"
-            psi_als = "False"
-            psi_bes = "False"
+            i_dqos = "False"
             psi_ds = "False"
             psi_qs = "False"
-            machine_id = "0"
             me_speed_out_addr = "0"
             el_torque_out_addr = "0"
             me_angle_out_addr = "0"

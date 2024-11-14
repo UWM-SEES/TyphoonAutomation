@@ -18,7 +18,7 @@ class Load2Scenario(object):
 
     def beginning_values(simulation: typhoon_automator.Simulation):
         # Battery initial values
-        simulation.set_scada_value("Batt_in.Pref", 200000.0)
+        simulation.set_scada_value("Batt_in.Pref", -200000.0)
         # Battery starts off
         simulation.set_scada_value("Batt_in.On", 0.0)
         simulation.set_scada_value("Batt_in.Qref", 0.0)
@@ -52,7 +52,7 @@ class Load2Scenario(object):
 
     def flip_switch(simulation: typhoon_automator.Simulation, swControl: bool, swState: bool):
         match int(simulation._fault):
-            case 0: # No event
+            case 0:  # No event
                 pass
             case 1:  # Line to Line (A to B)
                 simulation.set_contactor(Load2Scenario.AtoB, swControl, swState)
@@ -67,20 +67,20 @@ class Load2Scenario(object):
             case 6:  # Line to Ground (C to Gnd)
                 simulation.set_contactor(Load2Scenario.CtoGnd, swControl, swState)
             case 7:  # Line to Line to Ground (A to B to Gnd)
-                simulation.set_contactor(Load2Scenario.AtoB, swControl, swState)
+                simulation.set_contactor(Load2Scenario.BtoGnd, swControl, swState)
                 simulation.set_contactor(Load2Scenario.AtoGnd, swControl, swState)
             case 8:  # Line to Line to Ground (B to C to Gnd)
-                simulation.set_contactor(Load2Scenario.BtoC, swControl, swState)
+                simulation.set_contactor(Load2Scenario.CtoGnd, swControl, swState)
                 simulation.set_contactor(Load2Scenario.BtoGnd, swControl, swState)
             case 9:  # Line to Line to Ground (A to C to Gnd)
-                simulation.set_contactor(Load2Scenario.AtoC, swControl, swState)
+                simulation.set_contactor(Load2Scenario.CtoGnd, swControl, swState)
                 simulation.set_contactor(Load2Scenario.AtoGnd, swControl, swState)
             case 10:  # Three Line (A to B to C)
                 simulation.set_contactor(Load2Scenario.AtoB, swControl, swState)
                 simulation.set_contactor(Load2Scenario.BtoC, swControl, swState)
             case 11:  # Three Line to Ground (A to B to C to Gnd)
-                simulation.set_contactor(Load2Scenario.AtoB, swControl, swState)
-                simulation.set_contactor(Load2Scenario.BtoC, swControl, swState)
+                simulation.set_contactor(Load2Scenario.AtoGnd, swControl, swState)
+                simulation.set_contactor(Load2Scenario.BtoGnd, swControl, swState)
                 simulation.set_contactor(Load2Scenario.CtoGnd, swControl, swState)
 
     def close_switch(simulation: typhoon_automator.Simulation):
@@ -108,7 +108,13 @@ class Load2Scenario(object):
             "Battery inverter.Vc",
             "Battery inverter.I_a",
             "Battery inverter.I_b",
-            "Battery inverter.I_c"
+            "Battery inverter.I_c",
+            "Battery inverter.Vcap_a_n",
+            "Battery inverter.Vcap_b_n",
+            "Battery inverter.Vcap_c_n",
+            "Battery inverter.Ia_out_",
+            "Battery inverter.Ib_out_",
+            "Battery inverter.Ic_out_"
         ]
 
         simulation.set_data_logging_signals(signals)

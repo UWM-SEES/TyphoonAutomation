@@ -36,10 +36,9 @@ GEN_SCHEMATIC = "./fault_files/gen_faults.tse"
 DATA_LOG_PATH = "./output/data/"
 CAPTURE_PATH = "./output/capture/"
 
-RUNS = 1
+RUNS = 1000
 capture_time = 1.0 / 60.0
-nogroundload1 = [0,1,2,3,10]
-noground = [1,2,3,10]
+
 
 # Set up and run automator
 try:
@@ -50,13 +49,13 @@ try:
     hil_devices = automator.get_available_devices()
     use_vhil = False
 
-    x = 0
-    popitem = -1
-    for dev in hil_devices:
-        if dev['device_name'] == 'HiL-604-Bottom':
-            popitem = x
-        x += 1
-    if popitem is not -1: hil_devices.pop(popitem)
+    #x = 0
+    #popitem = -1
+    #for dev in hil_devices:
+    #    if dev['device_name'] == 'HiL-604-Bottom':
+    #        popitem = x
+    #    x += 1
+    #if popitem != -1: hil_devices.pop(popitem)
 
     # Add data logging and capture paths
     automator.set_data_logger_path(DATA_LOG_PATH)
@@ -80,7 +79,7 @@ try:
     automator.initialize(LOAD1_SCHEMATIC, conditional_compile=True)
 
     # range(0, 12)
-    for fault in nogroundload1:
+    for fault in range(0, 12):
         for x in range(1, RUNS + 1):
             time = 16
             automator.add_scenario(name=f"Load 1 Scenario {x} Fault {fault}", scenario=Load1Scenario(time))
@@ -107,7 +106,7 @@ try:
     automator.initialize(LOAD2_SCHEMATIC, conditional_compile=True)
 
     #range(1,12)
-    for fault in noground:
+    for fault in range(1,12):
         for x in range(1, RUNS + 1):
             time = 16
             automator.add_scenario(name=f"Load 2 Scenario {x} Fault {fault}", scenario=Load2Scenario(time))
@@ -133,7 +132,7 @@ try:
     # Initialize the automator with the schematic
     automator.initialize(LOAD3_SCHEMATIC, conditional_compile=True)
 
-    for fault in noground:
+    for fault in range(1,12):
         for x in range(1, RUNS + 1):
             time = 16
             automator.add_scenario(name=f"Load 3 Scenario {x} Fault {fault}", scenario=Load3Scenario(time))
@@ -159,7 +158,7 @@ try:
     # Initialize the automator with the schematic
     automator.initialize(GEN_SCHEMATIC, conditional_compile=True)
 
-    for fault in noground:
+    for fault in range(1,12):
         for x in range(1, RUNS + 1):
             time = 16
             automator.add_scenario(name=f"Generator Scenario {x} Fault {fault}", scenario=GenScenario(time))
@@ -185,7 +184,7 @@ try:
     # Initialize the automator with the schematic
     automator.initialize(BUS_SCHEMATIC, conditional_compile=True)
 
-    for fault in noground:
+    for fault in range(1,12):
         for x in range(1, RUNS + 1):
             time = 16
             automator.add_scenario(name=f"Bus Scenario {x} Fault {fault}", scenario=BusScenario(time))
