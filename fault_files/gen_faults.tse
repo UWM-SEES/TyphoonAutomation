@@ -4,7 +4,7 @@ version = 4.2
 // Saved by sw version: 2024.3
 //
 
-model "ecce_24_digest_bus_faults" {
+model "gen_faults" {
     configuration {
         hil_device = "HIL604"
         hil_configuration_id = 1
@@ -32338,6 +32338,36 @@ else if(Ride_Through_State==4){
                 position = 9888, 7392
             ]
 
+            junction Junction203 sp
+            [
+                position = 9640, 7904
+            ]
+
+            junction Junction204 sp
+            [
+                position = 9616, 7904
+            ]
+
+            junction Junction205 sp
+            [
+                position = 9592, 7904
+            ]
+
+            junction Junction206 sp
+            [
+                position = 8444, 7640
+            ]
+
+            junction Junction207 sp
+            [
+                position = 8444, 7736
+            ]
+
+            junction Junction208 sp
+            [
+                position = 8440, 7832
+            ]
+
             connect A "Grid meas.a" as Connection2714
             connect B "Grid meas.b" as Connection2712
             connect C "Grid meas.c" as Connection2710
@@ -32373,15 +32403,9 @@ else if(Ride_Through_State==4){
             connect From213 "Three Phase Inverter1.InA" as Connection2769
             connect From215 "Three Phase Inverter1.InC" as Connection2771
             connect Goto100 Ib_out.out as Connection2778
-            connect Goto86 Ia.out as Connection2258
-            connect Goto87 Ib.out as Connection2259
-            connect Goto88 Ic.out as Connection2260
             connect Goto93 Control.m_b as Connection2796
             connect Goto98 Ia_out.out as Connection2779
             connect Goto99 Ic_out.out as Connection2780
-            connect "Grid meas.VC" Goto89 as Connection2736
-            connect "Grid meas.VB" Goto90 as Connection2735
-            connect "Grid meas.VA" Goto91 as Connection2734
             connect "Grid meas.C" S1.c_out as Connection2711
             connect "Grid meas.A" S1.a_out as Connection2715
             connect "Grid meas.B" S1.b_out as Connection2713
@@ -32473,6 +32497,24 @@ else if(Ride_Through_State==4){
             connect Gain4.out Junction202 as Connection2837
             connect Junction202 Ride_Through_State_Machine.Input_Voltage as Connection2838
             connect Vin_RMS_BESS.in Junction202 as Connection2839
+            connect "Grid meas.VC" Junction203 as Connection2840
+            connect Junction203 Goto89 as Connection2841
+            connect Vc.in Junction203 as Connection2842
+            connect "Grid meas.VB" Junction204 as Connection2843
+            connect Junction204 Goto90 as Connection2844
+            connect Vb.in Junction204 as Connection2845
+            connect "Grid meas.VA" Junction205 as Connection2846
+            connect Junction205 Goto91 as Connection2847
+            connect Va.in Junction205 as Connection2848
+            connect Goto86 Junction206 as Connection2849
+            connect Junction206 Ia.out as Connection2850
+            connect I_a.in Junction206 as Connection2851
+            connect Goto87 Junction207 as Connection2852
+            connect Junction207 Ib.out as Connection2853
+            connect I_b.in Junction207 as Connection2854
+            connect Goto88 Junction208 as Connection2855
+            connect Junction208 Ic.out as Connection2856
+            connect I_c.in Junction208 as Connection2857
 
             Cdm = "5.1169e-04"
             L2 = "1.3751e-04"

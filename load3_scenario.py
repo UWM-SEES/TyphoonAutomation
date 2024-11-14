@@ -111,7 +111,7 @@ class Load3Scenario(object):
             "Battery inverter.I_c"
         ]
 
-        #simulation.set_data_logging_signals(signals)
+        simulation.set_data_logging_signals(signals)
 
         simulation.set_capture_signals(
             analog_signals = signals,

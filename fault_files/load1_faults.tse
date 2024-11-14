@@ -11846,7 +11846,7 @@ else{
             gain = "IM.TmPerOmegaSquared"
         }
         [
-            position = 9512, 8072
+            position = 9532, 8068
             scale = -1, 1
         ]
 
@@ -35722,7 +35722,7 @@ else if(Ride_Through_State==4){
         component "core/Single Pole Single Throw Contactor" "AGND - Load1" {
         }
         [
-            position = 8892, 7828
+            position = 8892, 7812
             rotation = right
             size = 64, 32
         ]
@@ -35730,7 +35730,7 @@ else if(Ride_Through_State==4){
         component "core/Single Pole Single Throw Contactor" "BGND - Load1" {
         }
         [
-            position = 9028, 7920
+            position = 9028, 7932
             rotation = right
             size = 64, 32
         ]
@@ -35738,7 +35738,7 @@ else if(Ride_Through_State==4){
         component "core/Single Pole Single Throw Contactor" "CGND - Load1" {
         }
         [
-            position = 9044, 8024
+            position = 9044, 8012
             rotation = right
             size = 64, 32
         ]
@@ -35746,7 +35746,7 @@ else if(Ride_Through_State==4){
         component "core/Ground" gnd1 {
         }
         [
-            position = 9040, 8104
+            position = 9116, 8092
         ]
 
         junction Junction6 sp
@@ -35859,16 +35859,6 @@ else if(Ride_Through_State==4){
             position = 8612, 8264
         ]
 
-        junction Junction46 pe
-        [
-            position = 8612, 8244
-        ]
-
-        junction Junction47 pe
-        [
-            position = 9028, 7872
-        ]
-
         junction Junction48 pe
         [
             position = 9044, 7968
@@ -35892,6 +35882,11 @@ else if(Ride_Through_State==4){
         junction Junction52 pe
         [
             position = 8696, 9136
+        ]
+
+        junction Junction53 pe
+        [
+            position = 9028, 7872
         ]
 
         connect DG_in1.inputs Diesel_Gen1.Inputs as Connection859
@@ -36005,7 +36000,6 @@ else if(Ride_Through_State==4){
         ]
         connect "Core Coupling6.a_in" Junction41 as Connection1462
         connect "AGND - Load1.a_in" Junction41 as Connection1464
-        connect Junction41 Junction42 as Connection1465
         connect Junction42 Junction40 as Connection1466
         connect "Core Coupling3.a_in" Junction42 as Connection1467
         connect "Core Coupling5.b_in" Junction43 as Connection1469
@@ -36020,11 +36014,6 @@ else if(Ride_Through_State==4){
         connect Junction44 Junction43 as Connection1473
         connect "Power meter IM.B" Junction45 as Connection1475
         connect Junction45 Junction44 as Connection1476
-        connect Junction46 Junction45 as Connection1479
-        connect "Core Coupling3.b_in" Junction46 as Connection1480
-        connect "Core Coupling6.b_in" Junction47 as Connection1481
-        connect Junction47 Junction46 as Connection1482
-        connect "BGND - Load1.a_in" Junction47 as Connection1483
         connect "Core Coupling6.c_in" Junction48 as Connection1485
         connect "CGND - Load1.a_in" Junction48 as Connection1487
         connect Junction48 Junction49 as Connection1488
@@ -36042,6 +36031,14 @@ else if(Ride_Through_State==4){
         connect "Core Coupling4.c_in" Junction52 as Connection1497
         connect Junction52 Junction51 as Connection1498
         connect "Core Coupling5.c_in" Junction52 as Connection1499
+        connect Junction41 Junction42 as Connection1504
+        connect Junction45 "Core Coupling3.b_in" as Connection1505
+        connect "BGND - Load1.a_in" Junction53 as Connection1507
+        connect Junction53 "Core Coupling6.b_in" as Connection1508
+        connect Junction45 Junction53 as Connection1509
+        [
+            breakpoints = 8612, 8264; 8612, 7872; 8992, 7872
+        ]
     }
 
     logically_deleted {
