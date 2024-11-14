@@ -18,7 +18,7 @@ class GenScenario(object):
 
     def beginning_values(simulation: typhoon_automator.Simulation):
         # Battery initial values
-        simulation.set_scada_value("Batt_in.Pref", -200000.0)
+        simulation.set_scada_value("Batt_in.Pref", 200000.0)
         # Battery starts off
         simulation.set_scada_value("Batt_in.On", 0.0)
         simulation.set_scada_value("Batt_in.Qref", 0.0)
