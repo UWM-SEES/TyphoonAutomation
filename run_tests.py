@@ -1,7 +1,4 @@
 import logging
-import pathlib as PATH
-
-from plotting_data import plot_data
 from src import typhoon_automator
 
 from load1_scenario import Load1Scenario as Load1Scenario
@@ -49,14 +46,16 @@ try:
     hil_devices = automator.get_available_devices()
     use_vhil = False
 
-    #x = 0
-    #popitem = -1
-    #for dev in hil_devices:
-    #    if dev['device_name'] == 'HiL-604-Bottom':
-    #        popitem = x
-    #    x += 1
-    #if popitem != -1: hil_devices.pop(popitem)
-
+    x = 0
+    popitem = -1
+    top = {}
+    for dev in hil_devices:
+        if dev['device_name'] == 'HiL-604-Top':
+            popitem = x
+        x += 1
+    if popitem != -1:
+        top = hil_devices.pop(popitem)
+    hil_devices = [top]
     # Add data logging and capture paths
     automator.set_data_logger_path(DATA_LOG_PATH)
     automator.set_capture_path(CAPTURE_PATH)
@@ -192,8 +191,6 @@ try:
     # Run all the scenarios
     automator.run(use_vhil=use_vhil)
     automator.shutdown()
-
-    plot_data(PATH.Path.cwd() / 'output' / 'capture')
 
 except BaseException as ex:
     logger.critical("Exiting due to exception")
