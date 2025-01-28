@@ -61,12 +61,7 @@ try:
     automator.set_capture_path(LOAD1_CAPTURE_PATH)
 
 
-    # Add 16000 scenarios
-    for fault in range(0, 12):
-        for x in range(1, runs+1):
-            time = 16
-            automator.add_scenario(name=f"Load 1 Scenario {x} Fault {fault}", scenario=Load1Scenario(time))
-
+    automator.add_scenario(name=f"Load 1 Scenario 1 Fault 0", scenario=Load1Scenario(16))
     # Run all the scenarios
     automator.run(use_vhil=use_vhil)
 

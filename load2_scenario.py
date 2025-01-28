@@ -155,7 +155,7 @@ class Load2Scenario(object):
         simulation.schedule_event(disable_time, disable_event)
 
         simulation.schedule_capture(
-            start_time = close_time - (CAPTURE_DURATION / 2),
+            start_time = close_time - (0.75 * CAPTURE_DURATION),
             duration = CAPTURE_DURATION,
             decimation = 50)
 

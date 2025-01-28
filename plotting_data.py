@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 def plot_data(directory: Path):
     for x in directory.iterdir():
-        if x.is_file():
+        if x.is_file() and 'Scenario 1 F' in x.stem:
             data_file = pd.read_csv(x)
             fig, (ax1, ax2) = plt.subplots(2, sharex=True)
             #Sets title for graphs
@@ -29,7 +29,6 @@ def plot_data(directory: Path):
                 ia = smaller_data_set["Battery inverter.I_a"]
                 ib = smaller_data_set["Battery inverter.I_b"]
                 ic = smaller_data_set["Battery inverter.I_c"]
-
             # Plots data to graphs
             ax1.plot(time, va)
             ax1.plot(time, vb)
@@ -43,4 +42,3 @@ path = Path.Path.cwd() / 'output' / 'data'
 path1 = Path.Path.cwd() / 'output' / 'capture'
 plot_data(path)
 plot_data(path1)
-print(1/60)

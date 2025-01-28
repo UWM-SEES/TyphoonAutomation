@@ -53,6 +53,7 @@ class Simulation(object):
         self._analog_capture_signals: list[str] = []
         self._digital_capture_signals: list[str] = []
         self._capture_filename: str = None
+        self._scenario_name: str = None
 
     def initialize(
             self,
@@ -115,7 +116,10 @@ class Simulation(object):
         """ Run the simulation until the stop signal is set
         """
         self.clear_stop_signal()
-        self.start_data_logger()
+
+        # TODO: Enable data logging. This is ended if you want to log data signals
+        # self.start_data_logger()
+
         self.start_simulation()
         self._automator.log(f"Scenario started at {self._start_time.strftime('%H:%M:%S, %m/%d/%Y')}")
 
@@ -153,11 +157,14 @@ class Simulation(object):
                 event = self._schedule.pop_next_event()
                 self.invoke_event(event)
 
+
+        # TODO: Not sure if this is needed anymore will need to test when enabling data logging again
+
         # TODO: This is sloppy fix to allow the data logger to finish logging
-        # TODO: See the stop_data_logger function for info on the bug which prompts this
-        logger_delay = 3
-        self._automator.log(f"Delaying {logger_delay} seconds for data logging flush", level = logging.WARNING)
-        time.sleep(logger_delay)
+        # TODO: See the stop_data_logger function for info on the bug which prompts this:: Testing to see if a shorter time works
+        # logger_delay = 0.1
+        # self._automator.log(f"Delaying {logger_delay} seconds for data logging flush", level = logging.WARNING)
+        # time.sleep(logger_delay)
 
         # Simulation loop is finished, stop simulation
         self.stop_simulation()
@@ -235,6 +242,12 @@ class Simulation(object):
         """ Stop the simulation
         """
         # Stop simulation
+
+        # Makes sure all captures in progress are completed before ending scenario. This ends the error that occurs
+        # when trying to end scenario before the capture is finished capturing
+        while self.is_capture_in_progress():
+            pass
+
         if self.is_simulation_running():
             self._automator.log("Stopping simulation")
             hil.stop_simulation()
@@ -333,7 +346,7 @@ class Simulation(object):
 
         # TODO: Consider allowing the user to define a trigger, possibly use a trigger factory to build the settings
         # TODO: Remove these trigger settings
-        trigger_settings = ["Analog",1,0.0,"Rising edge",50.0]
+        trigger_settings = ["Forced"]
         
         channel_settings = [
             self._analog_capture_signals,
@@ -418,11 +431,11 @@ class Simulation(object):
     def stop_data_logger(self):
         """ Stop the data logger
         """
-        # TODO: Open a Typhoon support ticket for this
+        # IGNORE: Open a Typhoon support ticket for this
         # Error message is always "get_data_logger_status() missing 1 required positional argument: 'name'"
-        #status = hil.get_data_logger_status(name = Simulation.DATA_LOGGER_NAME)
+        # status, message = hil.get_data_logger_status(name = Simulation.DATA_LOGGER_NAME)
 
-        # TODO: Instead of this, use the data logger status to determine if logging needs to be stopped
+        # IGNORE: Instead of this, use the data logger status to determine if logging needs to be stopped
         if not self._data_logging_filename:
             self._automator.log("No data logging filename, not stopping", level = logging.WARNING)
             return
@@ -543,6 +556,7 @@ class Simulation(object):
 
         self._capture_filename = filename
         self._fault = (filename.split("Fault ", 1)[1]).split(".",1)[0]
+        self._scenario_name = filename.split("Capture_", 1)[1].split(" Scenario",1)[0].replace(" ","")
 
     def set_scada_value(
             self,

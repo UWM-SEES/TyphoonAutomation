@@ -4,7 +4,7 @@ version = 4.2
 // Saved by sw version: 2024.3
 //
 
-model "load2_faults" {
+model "load3_faults" {
     configuration {
         hil_device = "HIL604"
         hil_configuration_id = 1
@@ -18895,6 +18895,7 @@ else if(Ride_Through_State==4){
             R0 = "0.1"
             Rres = "PVF.Rd"
             Sn = "PVF.VA_rated"
+            Ts = "Ts"
             V_Ki = "500"
             V_Kp = "5"
             V_lowLim = "-10"
@@ -33348,6 +33349,7 @@ else if(Ride_Through_State==4){
         ]
 
         component "core/Single Pole Single Throw Contactor" "AB - Load3" {
+            enable_fb_out = "True"
             signal_access = "Inherit"
         }
         [
@@ -35840,6 +35842,7 @@ else if(Ride_Through_State==4){
         ]
 
         component "core/Single Pole Single Throw Contactor" "BC - Load3" {
+            enable_fb_out = "True"
             signal_access = "Inherit"
         }
         [
@@ -35849,6 +35852,7 @@ else if(Ride_Through_State==4){
         ]
 
         component "core/Single Pole Single Throw Contactor" "AC - Load3" {
+            enable_fb_out = "True"
             signal_access = "Inherit"
         }
         [
@@ -35858,6 +35862,7 @@ else if(Ride_Through_State==4){
         ]
 
         component "core/Single Pole Single Throw Contactor" "AGND - Load3" {
+            enable_fb_out = "True"
             signal_access = "Inherit"
         }
         [
@@ -35867,6 +35872,7 @@ else if(Ride_Through_State==4){
         ]
 
         component "core/Single Pole Single Throw Contactor" "BGND - Load3" {
+            enable_fb_out = "True"
             signal_access = "Inherit"
         }
         [
@@ -35876,6 +35882,7 @@ else if(Ride_Through_State==4){
         ]
 
         component "core/Single Pole Single Throw Contactor" "CGND - Load3" {
+            enable_fb_out = "True"
             signal_access = "Inherit"
         }
         [
@@ -35899,6 +35906,21 @@ else if(Ride_Through_State==4){
             position = 8144, 8280
             scale = -1, 1
             size = 12, 352
+        ]
+
+        component "core/Probe" "Switch State" {
+        }
+        [
+            position = 10452, 8480
+        ]
+
+        component "core/Logical operator" "Logical operator2" {
+            execution_rate = "Ts"
+            inputs = "6"
+            operator = "OR"
+        }
+        [
+            position = 10380, 8480
         ]
 
         junction Junction6 sp
@@ -36214,6 +36236,13 @@ else if(Ride_Through_State==4){
         connect "Power meter Load 3.W" Junction63 as Connection1632
         connect Junction63 Junction61 as Connection1633
         connect "BC - Load3.a_out" Junction63 as Connection1634
+        connect "Logical operator2.out" "Switch State.in" as Connection1608
+        connect "AGND - Load3.feedback_out" "Logical operator2.in" as Connection1635
+        connect "BGND - Load3.feedback_out" "Logical operator2.in1" as Connection1636
+        connect "CGND - Load3.feedback_out" "Logical operator2.in2" as Connection1637
+        connect "AB - Load3.feedback_out" "Logical operator2.in3" as Connection1638
+        connect "AC - Load3.feedback_out" "Logical operator2.in4" as Connection1639
+        connect "BC - Load3.feedback_out" "Logical operator2.in5" as Connection1640
     }
 
     logically_deleted {
@@ -36994,7 +37023,7 @@ else if(Ride_Through_State==4){
         # To get the model file path, use 'mdl.get_model_file_path()'
         # To print information to the console, use info()
         
-        Ts = 200e-6
+        Ts = 100e-6
         
         sqrt_2 = 2**(0.5)
         sqrt_3 = 3**(0.5)

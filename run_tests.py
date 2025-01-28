@@ -1,25 +1,25 @@
 import logging
+LOG_LEVEL = logging.DEBUG
+LOGFORMAT = "  %(log_color)s%(levelname)-8s%(reset)s | %(log_color)s%(message)s%(reset)s"
+from colorlog import ColoredFormatter
+logging.root.setLevel(LOG_LEVEL)
+formatter = ColoredFormatter(LOGFORMAT)
+
+from generic_scenario import GenericScenario as GenericScenario
 from src import typhoon_automator
 
-from load1_scenario import Load1Scenario as Load1Scenario
-from load2_scenario import Load2Scenario as Load2Scenario
-from load3_scenario import Load3Scenario as Load3Scenario
-from bus_scenario import BusScenario as BusScenario
-from gen_scenario import GenScenario as GenScenario
+
 
 # Create logger
-HIL_LOGGING_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"  # Log message format
-HIL_LOGGING_DATETIMEFORMAT = '%m/%d/%Y %I:%M:%S %p'  # Formats datetime data to be Month/Day/Year Hour:Minute:Seconds AM/PM
 HIL_LOGGER_NAME = "HIL_LOGGER"  # Logger name
 HIL_LOG_FILENAME = "./log.txt"  # Logging filename
 HIL_LOG_LEVEL = logging.DEBUG  # Lowest severity level to log
 
 logger = logging.getLogger(HIL_LOGGER_NAME)
-logger_formatter = logging.Formatter(fmt=HIL_LOGGING_FORMAT, datefmt=HIL_LOGGING_DATETIMEFORMAT)
 
 # Add console handler
 logger_console = logging.StreamHandler()
-logger_console.setFormatter(logger_formatter)
+logger_console.setFormatter(formatter)
 logger.addHandler(logger_console)
 
 # Set log level
@@ -35,6 +35,7 @@ CAPTURE_PATH = "./output/capture/"
 
 RUNS = 1000
 capture_time = 1.0 / 60.0
+time = 13
 
 
 # Set up and run automator
@@ -80,12 +81,12 @@ try:
     # range(0, 12)
     for fault in range(0, 12):
         for x in range(1, RUNS + 1):
-            time = 16
-            automator.add_scenario(name=f"Load 1 Scenario {x} Fault {fault}", scenario=Load1Scenario(time))
+            automator.add_scenario(name=f"Load 1 Scenario {x} Fault {fault}", scenario=GenericScenario(time))
 
     # Run all the scenarios
     automator.run(use_vhil=use_vhil)
     automator.shutdown()
+
 
     # Connect to HIL devices, or specify use of Virtual HIL
     if len(hil_devices) > 0:
@@ -107,8 +108,7 @@ try:
     #range(1,12)
     for fault in range(1,12):
         for x in range(1, RUNS + 1):
-            time = 16
-            automator.add_scenario(name=f"Load 2 Scenario {x} Fault {fault}", scenario=Load2Scenario(time))
+            automator.add_scenario(name=f"Load 2 Scenario {x} Fault {fault}", scenario=GenericScenario(time))
 
     # Run all the scenarios
     automator.run(use_vhil=use_vhil)
@@ -133,8 +133,7 @@ try:
 
     for fault in range(1,12):
         for x in range(1, RUNS + 1):
-            time = 16
-            automator.add_scenario(name=f"Load 3 Scenario {x} Fault {fault}", scenario=Load3Scenario(time))
+            automator.add_scenario(name=f"Load 3 Scenario {x} Fault {fault}", scenario=GenericScenario(time))
 
     # Run all the scenarios
     automator.run(use_vhil=use_vhil)
@@ -159,8 +158,7 @@ try:
 
     for fault in range(1,12):
         for x in range(1, RUNS + 1):
-            time = 16
-            automator.add_scenario(name=f"Generator Scenario {x} Fault {fault}", scenario=GenScenario(time))
+            automator.add_scenario(name=f"Gen Scenario {x} Fault {fault}", scenario=GenericScenario(time))
 
     # Run all the scenarios
     automator.run(use_vhil=use_vhil)
@@ -185,8 +183,7 @@ try:
 
     for fault in range(1,12):
         for x in range(1, RUNS + 1):
-            time = 16
-            automator.add_scenario(name=f"Bus Scenario {x} Fault {fault}", scenario=BusScenario(time))
+            automator.add_scenario(name=f"Bus Scenario {x} Fault {fault}", scenario=GenericScenario(time))
 
     # Run all the scenarios
     automator.run(use_vhil=use_vhil)

@@ -7,7 +7,7 @@ version = 4.2
 model "rlc" {
     configuration {
         hil_device = "HIL604"
-        hil_configuration_id = 2
+        hil_configuration_id = 1
         simulation_method = exact
         simulation_time_step = .5e-6
         simulation_discret_scaling = 1.0
