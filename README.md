@@ -23,6 +23,8 @@ Users should have the ability to write a script which will automate the interact
 
 Users will need a Typhoon license suitable for running their models on the intended simulation platform.
 
+[Go here for directions on using the automator](./docs/code/how_to_use.md)
+
 ## Contributing
 Use of this tool should be as simple as providing a Typhoon schematic and an automation script to the tool.  This feature, like many other features, is not yet complete.  **Contributions to this project are welcome and encouraged!**  Feel free to post questions or comments on the Issues page or to fork the repository and improve the project.
 

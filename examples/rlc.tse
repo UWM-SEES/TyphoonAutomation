@@ -1,13 +1,13 @@
 version = 4.2
 
 //
-// Saved by sw version: 2022.3
+// Saved by sw version: 2024.4 SP1
 //
 
 model "rlc" {
     configuration {
         hil_device = "HIL604"
-        hil_configuration_id = 2
+        hil_configuration_id = 1
         simulation_method = exact
         simulation_time_step = .5e-6
         simulation_discret_scaling = 1.0
@@ -18,6 +18,7 @@ model "rlc" {
         show_modes = False
         device_ao_limit_enable = False
         reset_analog_outputs_on_sim_stop = True
+        reset_analog_outputs_on_sim_stop_mode = Offset values
         reset_digital_outputs_on_sim_stop = True
         vhil_adio_loopback = False
         cpl_stb = False
@@ -41,6 +42,11 @@ model "rlc" {
         cce_type_mapping_real = "double"
         cce_type_mapping_uint = "unsigned int"
         cce_type_mapping_int = "int"
+        cce_platform = "generic"
+        cce_use_relative_names = False
+        cce_type_mapping_real = "double"
+        cce_type_mapping_uint = "unsigned int"
+        cce_type_mapping_int = "int"
         cce_directory = ""
         cce_custom_type_int = ""
         cce_custom_type_uint = ""
@@ -50,14 +56,27 @@ model "rlc" {
         sig_stim = "off"
         export_resource_list = ""
         export_dependency_list = ""
+        excluded_resource_list = ""
+        excluded_component_from_locking_list = ""
         export_out_file = ""
         export_lock_top_level = True
         export_encrypt_library = True
         export_encrypt_resources = True
+        solver_type = "DAE"
+        integration_method = "BDF"
+        max_sim_step = 1e-4
+        simulation_time = 1.0
+        abs_tol = 1e-3
+        rel_tol = 1e-3
+        init_sim_step = 1e-6
+        r_on_sw = 1e-3
+        v_on_diode = 0.2
+        data_sampling_rate = 0
+        feedthrough_validation_error_level = warning
     }
 
     component Subsystem "My model" {
-        component pas_inductor L {
+        component "core/Inductor" L {
             inductance = "I_val"
         }
         [
@@ -65,14 +84,14 @@ model "rlc" {
             rotation = right
         ]
 
-        component pas_resistor Rin {
-            resistance = "0.01"
+        component "core/Resistor" Rin {
+            resistance = "R_val1"
         }
         [
             position = 1816, 1904
         ]
 
-        component pas_resistor R {
+        component "core/Resistor" R {
             resistance = "R_val"
         }
         [
@@ -80,7 +99,7 @@ model "rlc" {
             rotation = down
         ]
 
-        component src_ground gnd {
+        component "core/Ground" gnd {
         }
         [
             position = 1760, 2176
@@ -97,7 +116,7 @@ model "rlc" {
             size = 64, 32
         ]
 
-        component src_voltage Vdc {
+        component "core/Voltage Source" Vdc {
             R2 = "0.1"
             init_const_value = "5.0"
             param_set = ""
@@ -127,7 +146,7 @@ model "rlc" {
             size = 64, 32
         ]
 
-        component src_scada_input Sw_ctrl {
+        component "core/SCADA Input" Sw_ctrl {
             execution_rate = "Ts"
             unit = ""
         }
@@ -135,14 +154,14 @@ model "rlc" {
             position = 1856, 1816
         ]
 
-        component gen_probe I_ind {
+        component "core/Probe" I_ind {
             streaming_en = "True"
         }
         [
             position = 2440, 1976
         ]
 
-        component gen_probe V_cap {
+        component "core/Probe" V_cap {
             execution_rate = "Ts"
             streaming_en = "True"
         }
@@ -151,7 +170,7 @@ model "rlc" {
             scale = -1, 1
         ]
 
-        component pas_capacitor C {
+        component "core/Capacitor" C {
             capacitance = "C_val"
         }
         [
@@ -206,7 +225,24 @@ model "rlc" {
     }
 
     default {
-        gen_probe {
+        "core/Capacitor" {
+            signal_access = "inherit"
+            capacitance = "1e-6"
+            initial_voltage = "0"
+            pole_shift_ignore = "False"
+            visible = "True"
+        }
+
+        "core/Inductor" {
+            signal_access = "inherit"
+            inductance = "1e-3"
+            initial_current = "0.0"
+            pole_shift_ignore = "False"
+            visible = "True"
+        }
+
+        "core/Probe" {
+            signal_access = "inherit"
             addr = "0"
             override_signal_name = "False"
             signal_name = ""
@@ -216,26 +252,13 @@ model "rlc" {
             execution_rate = "inherit"
         }
 
-        pas_capacitor {
-            capacitance = "1e-6"
-            initial_voltage = "0"
-            pole_shift_ignore = "False"
-            visible = "True"
-        }
-
-        pas_inductor {
-            inductance = "1e-3"
-            initial_current = "0.0"
-            pole_shift_ignore = "False"
-            visible = "True"
-        }
-
-        pas_resistor {
+        "core/Resistor" {
             resistance = "1"
             param_set = ""
         }
 
-        src_scada_input {
+        "core/SCADA Input" {
+            signal_access = "inherit"
             addr = "0"
             format = "real"
             override_signal_name = "False"
@@ -248,11 +271,12 @@ model "rlc" {
             execution_rate = "100e-6"
         }
 
-        src_voltage {
+        "core/Voltage Source" {
             sig_input = "False"
             type = "signal generator"
             param_set = "1phase"
             parent_label = ""
+            dtsm_switch_name = ""
             addr = "0"
             spc_nb = "0"
             execution_rate = "100e-6"
@@ -271,6 +295,7 @@ model "rlc" {
         }
 
         "core/Current Measurement" {
+            signal_access = "inherit"
             bw_limit = "False"
             frequency = "10e3"
             comparator_enable = "False"
@@ -294,12 +319,21 @@ model "rlc" {
         }
 
         "core/Single Pole Single Throw Contactor" {
+            signal_access = "inherit"
+            switches_option = "False"
+            resistance = "1.0"
             ctrl_src = "Digital input"
+            ctrl_mode = "switch"
             Sa = "1"
             Sa_logic = "active high"
+            pwm_enabling = "False"
+            pwm_enable_di = "13"
+            pwm_enable_inv = "active high"
             enable_fb_out = "False"
             fb_out_type = "real"
             execution_rate = "inherit"
+            dtsm_switch_name = ""
+            dtsm_switch_ctrl = ""
             initial_state = "off"
             on_delay = "0"
             off_delay = "0"
@@ -308,6 +342,7 @@ model "rlc" {
         }
 
         "core/Voltage Measurement" {
+            signal_access = "inherit"
             bw_limit = "False"
             frequency = "10e3"
             comparator_enable = "False"
@@ -343,5 +378,6 @@ model "rlc" {
         C_val = 680e-6
         I_val = 1e-3
         R_val = 0.1
+        R_val1 = 0.01
     ENDCODE
 }

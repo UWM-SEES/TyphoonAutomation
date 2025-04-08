@@ -167,7 +167,10 @@ class TyphoonAutomator(object):
           scenario = scenario)
 
     def clear_scenarios(self):
-        raise NotImplementedError()
+        if self._orchestrator is None:
+            raise RuntimeError("Automation is not initialized")
+
+        self._orchestrator.clear_scenarios()
 
     def load_scenarios(
             self,
@@ -229,7 +232,14 @@ class TyphoonAutomator(object):
         except:
           self.log("Failed to disconnect HIL setup", level = logging.CRITICAL)
           raise
-    
+
+        #Clears the scenarios for the automator
+        try:
+            self.clear_scenarios()
+        except:
+            self.log("Failed to clear scenarios", level = logging.CRITICAL)
+            raise
+
         # Log shutdown  
         shutdown_time = datetime.now()
         self.log(f"*** Shutdown at {shutdown_time.strftime('%H:%M:%S, %m/%d/%Y')} ***")
