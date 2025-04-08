@@ -39,7 +39,7 @@ class GenericScenario(object):
         simulation.set_scada_value("PV_in.Irradiation", 200.0)
         simulation.set_scada_value("PV_in.Q_mode", 1.0)
         simulation.set_scada_value("PV_in.Q_ref", 0.0)
-        simulation.set_scada_value("PV_in.V_ref", 480.0) \
+        simulation.set_scada_value("PV_in.V_ref", 480.0)
         # Initialize switches as open
         extension = simulation._scenario_name
         simulation.set_contactor(GenericScenario.AtoB+extension, True, False)

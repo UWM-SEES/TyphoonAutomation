@@ -1,7 +1,7 @@
 version = 4.2
 
 //
-// Saved by sw version: 2024.3
+// Saved by sw version: 2024.4 SP1
 //
 
 model "load1_faults" {
@@ -57,11 +57,13 @@ model "load1_faults" {
         export_resource_list = ""
         export_dependency_list = ""
         excluded_resource_list = ""
+        excluded_component_from_locking_list = ""
         export_out_file = ""
         export_lock_top_level = True
         export_encrypt_library = True
         export_encrypt_resources = True
-        dae_solver = "BDF"
+        solver_type = "DAE"
+        integration_method = "BDF"
         max_sim_step = 1e-4
         simulation_time = 1.0
         abs_tol = 1e-3
@@ -35842,6 +35844,7 @@ else if(Ride_Through_State==4){
         ]
 
         component "core/Single Pole Single Throw Contactor" "BC - Load1" {
+            Sa = "2"
             enable_fb_out = "True"
             signal_access = "Inherit"
         }
@@ -35852,6 +35855,7 @@ else if(Ride_Through_State==4){
         ]
 
         component "core/Single Pole Single Throw Contactor" "AC - Load1" {
+            Sa = "3"
             enable_fb_out = "True"
             signal_access = "Inherit"
         }
@@ -35862,6 +35866,7 @@ else if(Ride_Through_State==4){
         ]
 
         component "core/Single Pole Single Throw Contactor" "AGND - Load1" {
+            Sa = "4"
             enable_fb_out = "True"
             signal_access = "Inherit"
         }
@@ -35872,6 +35877,7 @@ else if(Ride_Through_State==4){
         ]
 
         component "core/Single Pole Single Throw Contactor" "BGND - Load1" {
+            Sa = "5"
             enable_fb_out = "True"
             signal_access = "Inherit"
         }
@@ -35882,6 +35888,7 @@ else if(Ride_Through_State==4){
         ]
 
         component "core/Single Pole Single Throw Contactor" "CGND - Load1" {
+            Sa = "6"
             enable_fb_out = "True"
             signal_access = "Inherit"
         }
@@ -36670,12 +36677,20 @@ else if(Ride_Through_State==4){
 
         "core/Single Pole Single Throw Contactor" {
             signal_access = "inherit"
+            switches_option = "False"
+            resistance = "1.0"
             ctrl_src = "Digital input"
+            ctrl_mode = "switch"
             Sa = "1"
             Sa_logic = "active high"
+            pwm_enabling = "False"
+            pwm_enable_di = "13"
+            pwm_enable_inv = "active high"
             enable_fb_out = "False"
             fb_out_type = "real"
             execution_rate = "inherit"
+            dtsm_switch_name = ""
+            dtsm_switch_ctrl = ""
             initial_state = "off"
             on_delay = "0"
             off_delay = "0"
@@ -36981,15 +36996,20 @@ else if(Ride_Through_State==4){
 
         "core/Triple Pole Single Throw Contactor" {
             signal_access = "inherit"
+            switches_option = "False"
+            resistance = "1.0"
             ctrl_src = "Digital input"
             Sa = "1"
             Sa_logic = "active high"
             enable_fb_out = "False"
             fb_out_type = "real"
             execution_rate = "inherit"
+            dtsm_switch_name = ""
             initial_state = "off"
             on_delay = "0"
             off_delay = "0"
+            switching = "zero current"
+            hide_int_meas = "False"
         }
 
         "core/Voltage Measurement" {
