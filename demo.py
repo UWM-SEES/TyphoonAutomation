@@ -4,14 +4,16 @@ from src import typhoon_automator
 
 from demo_scenario import DemoScenario as DemoScenario
 
+from colorlog import ColoredFormatter
+
 # Create logger
-HIL_LOGGING_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"    # Log message format
+HIL_LOGGING_FORMAT = "%(log_color)s%(asctime)s%(reset)s - %(log_color)s%(levelname)-8s%(reset)s | %(log_color)s%(message)s%(reset)s"    # Log message format
 HIL_LOGGER_NAME = "HIL_LOGGER"    # Logger name
 HIL_LOG_FILENAME = "./log.txt"    # Logging filename
 HIL_LOG_LEVEL = logging.DEBUG     # Lowest severity level to log
 
 logger = logging.getLogger(HIL_LOGGER_NAME)
-logger_formatter = logging.Formatter(HIL_LOGGING_FORMAT)
+logger_formatter = ColoredFormatter(HIL_LOGGING_FORMAT)
 
 # Add console handler
 logger_console = logging.StreamHandler()

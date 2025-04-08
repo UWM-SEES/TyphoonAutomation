@@ -547,3 +547,8 @@ class Simulation(object):
             name: str,
             value: Any):
         self._model.set_scada_value(name = name, value = value)
+
+    def log(self,
+            message: str,
+            level: int = logging.DEBUG):
+        self._automator.log(message, level = level)
