@@ -2,17 +2,15 @@ from src import typhoon_automator
 import random
 
 # Create an example scenario
-class GenScenario(object):
-    AtoB = "AB - Gen"
-    BtoC = "BC - Gen"
-    AtoC = "AC - Gen"
-    AtoGnd = "AGND - Gen"
-    BtoGnd = "BGND - Gen"
-    CtoGnd = "CGND - Gen"
+class GenericScenario(object):
+    AtoB = "AB - "
+    BtoC = "BC - "
+    AtoC = "AC - "
+    AtoGnd = "AGND - "
+    BtoGnd = "BGND - "
+    CtoGnd = "CGND - "
 
-    def __init__(
-            self,
-            duration: float):
+    def __init__(self, duration: float):
         self._duration = duration
 
 
@@ -41,53 +39,56 @@ class GenScenario(object):
         simulation.set_scada_value("PV_in.Irradiation", 200.0)
         simulation.set_scada_value("PV_in.Q_mode", 1.0)
         simulation.set_scada_value("PV_in.Q_ref", 0.0)
-        simulation.set_scada_value("PV_in.V_ref", 480.0) \
+        simulation.set_scada_value("PV_in.V_ref", 480.0)
         # Initialize switches as open
-        simulation.set_contactor(GenScenario.AtoB, True, False)
-        simulation.set_contactor(GenScenario.BtoC, True, False)
-        simulation.set_contactor(GenScenario.AtoC, True, False)
-        simulation.set_contactor(GenScenario.AtoGnd, True, False)
-        simulation.set_contactor(GenScenario.BtoGnd, True, False)
-        simulation.set_contactor(GenScenario.CtoGnd, True, False)
+        extension = simulation._capture_filename.split(" Scenario")[0]
+        simulation.set_contactor(GenericScenario.AtoB+extension, True, False)
+        simulation.set_contactor(GenericScenario.BtoC+extension, True, False)
+        simulation.set_contactor(GenericScenario.AtoC+extension, True, False)
+        simulation.set_contactor(GenericScenario.AtoGnd+extension, True, False)
+        simulation.set_contactor(GenericScenario.BtoGnd+extension, True, False)
+        simulation.set_contactor(GenericScenario.CtoGnd+extension, True, False)
 
     def flip_switch(simulation: typhoon_automator.Simulation, swControl: bool, swState: bool):
-        match int(simulation._fault):
-            case 0:  # No event
+        extension = simulation._capture_filename.split(" Scenario")[0]
+        fault = int(simulation._capture_filename.split("Fault ")[1])
+        match int(fault):
+            case 0: # No event
                 pass
             case 1:  # Line to Line (A to B)
-                simulation.set_contactor(GenScenario.AtoB, swControl, swState)
+                simulation.set_contactor(GenericScenario.AtoB+extension, swControl, swState)
             case 2:  # Line to Line (B to C)
-                simulation.set_contactor(GenScenario.BtoC, swControl, swState)
+                simulation.set_contactor(GenericScenario.BtoC+extension, swControl, swState)
             case 3:  # Line to Line (A to C)
-                simulation.set_contactor(GenScenario.AtoC, swControl, swState)
+                simulation.set_contactor(GenericScenario.AtoC+extension, swControl, swState)
             case 4:  # Line to Ground (A to Gnd)
-                simulation.set_contactor(GenScenario.AtoGnd, swControl, swState)
+                simulation.set_contactor(GenericScenario.AtoGnd+extension, swControl, swState)
             case 5:  # Line to Ground (B to Gnd)
-                simulation.set_contactor(GenScenario.BtoGnd, swControl, swState)
+                simulation.set_contactor(GenericScenario.BtoGnd+extension, swControl, swState)
             case 6:  # Line to Ground (C to Gnd)
-                simulation.set_contactor(GenScenario.CtoGnd, swControl, swState)
+                simulation.set_contactor(GenericScenario.CtoGnd+extension, swControl, swState)
             case 7:  # Line to Line to Ground (A to B to Gnd)
-                simulation.set_contactor(GenScenario.BtoGnd, swControl, swState)
-                simulation.set_contactor(GenScenario.AtoGnd, swControl, swState)
+                simulation.set_contactor(GenericScenario.BtoGnd+extension, swControl, swState)
+                simulation.set_contactor(GenericScenario.AtoGnd+extension, swControl, swState)
             case 8:  # Line to Line to Ground (B to C to Gnd)
-                simulation.set_contactor(GenScenario.CtoGnd, swControl, swState)
-                simulation.set_contactor(GenScenario.BtoGnd, swControl, swState)
+                simulation.set_contactor(GenericScenario.CtoGnd+extension, swControl, swState)
+                simulation.set_contactor(GenericScenario.BtoGnd+extension, swControl, swState)
             case 9:  # Line to Line to Ground (A to C to Gnd)
-                simulation.set_contactor(GenScenario.CtoGnd, swControl, swState)
-                simulation.set_contactor(GenScenario.AtoGnd, swControl, swState)
+                simulation.set_contactor(GenericScenario.CtoGnd+extension, swControl, swState)
+                simulation.set_contactor(GenericScenario.AtoGnd+extension, swControl, swState)
             case 10:  # Three Line (A to B to C)
-                simulation.set_contactor(GenScenario.AtoB, swControl, swState)
-                simulation.set_contactor(GenScenario.BtoC, swControl, swState)
+                simulation.set_contactor(GenericScenario.AtoB+extension, swControl, swState)
+                simulation.set_contactor(GenericScenario.BtoC+extension, swControl, swState)
             case 11:  # Three Line to Ground (A to B to C to Gnd)
-                simulation.set_contactor(GenScenario.AtoGnd, swControl, swState)
-                simulation.set_contactor(GenScenario.BtoGnd, swControl, swState)
-                simulation.set_contactor(GenScenario.CtoGnd, swControl, swState)
+                simulation.set_contactor(GenericScenario.AtoGnd+extension, swControl, swState)
+                simulation.set_contactor(GenericScenario.BtoGnd+extension, swControl, swState)
+                simulation.set_contactor(GenericScenario.CtoGnd+extension, swControl, swState)
 
     def close_switch(simulation: typhoon_automator.Simulation):
-        GenScenario.flip_switch(simulation,True,True)
+        GenericScenario.flip_switch(simulation,True,True)
 
     def open_switch(simulation: typhoon_automator.Simulation):
-        GenScenario.flip_switch(simulation, True, False)
+        GenericScenario.flip_switch(simulation, True, False)
 
     def enable_batt(simulation: typhoon_automator.Simulation):
         simulation.set_scada_value(name="Batt_in.On", value=1.0)
@@ -98,10 +99,10 @@ class GenScenario(object):
     def set_up_scenario(
             self,
             simulation: typhoon_automator.Simulation):
-        """ Set up the Gen scenaro
+        """ Set up the load1 scenaro
             First all necessary values are set up
         """
-        GenScenario.beginning_values(simulation)
+        GenericScenario.beginning_values(simulation)
         signals = [
             "Battery inverter.Va",
             "Battery inverter.Vb",
@@ -114,10 +115,11 @@ class GenScenario(object):
             "Battery inverter.Vcap_c_n",
             "Battery inverter.Ia_out_",
             "Battery inverter.Ib_out_",
-            "Battery inverter.Ic_out_"
+            "Battery inverter.Ic_out_",
+            "Switch State"
         ]
 
-        simulation.set_data_logging_signals(signals)
+        # simulation.set_data_logging_signals(signals)
 
         simulation.set_capture_signals(
             analog_signals = signals,
@@ -128,24 +130,24 @@ class GenScenario(object):
         # Create and schedule switch close and open events
         close_event = typhoon_automator.Utility.create_callback_event(
             message = f"Closing switches case {simulation._fault}",
-            callback = GenScenario.close_switch)
-        close_time = random.uniform(11, 14)
+            callback = GenericScenario.close_switch)
+        close_time = random.uniform(11, 12)
 
         open_event = typhoon_automator.Utility.create_callback_event(
             message = "Opening switch",
-            callback = GenScenario.open_switch)
+            callback = GenericScenario.open_switch)
         #open_time = random.uniform(close_time+0.003, CAPTURE_DURATION+close_time)
-        open_time = 15
+        open_time = 12.5
 
         enable_event = typhoon_automator.Utility.create_callback_event(
             message="Turning Battery On",
-            callback=GenScenario.enable_batt)
+            callback=GenericScenario.enable_batt)
         enable_time = 3
 
         disable_event = typhoon_automator.Utility.create_callback_event(
             message="Turning Battery Off",
-            callback=GenScenario.disable_batt)
-        disable_time = 15
+            callback=GenericScenario.disable_batt)
+        disable_time = 12.5
 
         simulation.schedule_event(close_time, close_event)
         simulation.schedule_event(open_time, open_event)

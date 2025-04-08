@@ -23,7 +23,6 @@ class Simulation(object):
             self,
             automator,
             model: ModelManager):
-        self._fault = None
         from .automator import TyphoonAutomator
         from .automator import Utility
 
@@ -53,7 +52,6 @@ class Simulation(object):
         self._analog_capture_signals: list[str] = []
         self._digital_capture_signals: list[str] = []
         self._capture_filename: str = None
-        self._scenario_name: str = None
 
     def initialize(
             self,

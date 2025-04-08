@@ -30,8 +30,8 @@ LOAD2_SCHEMATIC = "./fault_files/load2_faults.tse"
 LOAD3_SCHEMATIC = "./fault_files/load3_faults.tse"
 BUS_SCHEMATIC = "./fault_files/bus_faults.tse"
 GEN_SCHEMATIC = "./fault_files/gen_faults.tse"
-DATA_LOG_PATH = "./output/data/"
-CAPTURE_PATH = "./output/capture/"
+DATA_LOG_PATH = "../output/data/"
+CAPTURE_PATH = "../output/capture/"
 
 RUNS = 1000
 capture_time = 1.0 / 60.0
