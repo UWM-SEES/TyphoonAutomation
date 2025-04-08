@@ -141,3 +141,6 @@ class Orchestrator(object):
 
     def clear_scenario_exceptions(self):
         self._scenario_exceptions = []
+
+    def clear_scenarios(self):
+        self._scenarios = {}

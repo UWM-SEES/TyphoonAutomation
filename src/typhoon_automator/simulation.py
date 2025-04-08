@@ -23,6 +23,7 @@ class Simulation(object):
             self,
             automator,
             model: ModelManager):
+        self._fault = None
         from .automator import TyphoonAutomator
         from .automator import Utility
 
@@ -52,6 +53,7 @@ class Simulation(object):
         self._analog_capture_signals: list[str] = []
         self._digital_capture_signals: list[str] = []
         self._capture_filename: str = None
+        self._scenario_name: str = None
 
     def initialize(
             self,
@@ -152,9 +154,12 @@ class Simulation(object):
                 event = self._schedule.pop_next_event()
                 self.invoke_event(event)
 
+
+        # TODO: Not sure if this is needed anymore will need to test when enabling data logging again
+
         # TODO: This is sloppy fix to allow the data logger to finish logging
         # TODO: See the stop_data_logger function for info on the bug which prompts this
-        logger_delay = 3
+        logger_delay = 1
         self._automator.log(f"Delaying {logger_delay} seconds for data logging flush", level = logging.WARNING)
         time.sleep(logger_delay)
 
@@ -331,8 +336,8 @@ class Simulation(object):
             capture_digital]        # True to capture digital signals
 
         # TODO: Consider allowing the user to define a trigger, possibly use a trigger factory to build the settings
-        trigger_settings = [
-            "Forced"]
+        # TODO: Remove these trigger settings
+        trigger_settings = ["Forced"]
         
         channel_settings = [
             self._analog_capture_signals,
@@ -403,7 +408,7 @@ class Simulation(object):
             return
 
         self._automator.log(f"Starting data logger, file {self._data_logging_filename}")
-    
+
         if not hil.add_data_logger(
                 name = Simulation.DATA_LOGGER_NAME,
                 data_file = self._data_logging_filename,
@@ -417,11 +422,11 @@ class Simulation(object):
     def stop_data_logger(self):
         """ Stop the data logger
         """
-        # TODO: Open a Typhoon support ticket for this
+        # IGNORE: Open a Typhoon support ticket for this
         # Error message is always "get_data_logger_status() missing 1 required positional argument: 'name'"
-        #status = hil.get_data_logger_status(name = Simulation.DATA_LOGGER_NAME)
+        # status, message = hil.get_data_logger_status(name = Simulation.DATA_LOGGER_NAME)
 
-        # TODO: Instead of this, use the data logger status to determine if logging needs to be stopped
+        # IGNORE: Instead of this, use the data logger status to determine if logging needs to be stopped
         if not self._data_logging_filename:
             self._automator.log("No data logging filename, not stopping", level = logging.WARNING)
             return
@@ -552,3 +557,11 @@ class Simulation(object):
             message: str,
             level: int = logging.DEBUG):
         self._automator.log(message, level = level)
+
+    def set_contactor(
+            self,
+            name: str,
+            swControl: bool,
+            swState: bool,
+            executeAt: Any=None):
+        self._model.set_contactor(name = name, swControl=swControl, swState=swState, executeAt=executeAt)

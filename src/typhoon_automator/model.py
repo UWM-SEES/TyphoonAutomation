@@ -213,3 +213,14 @@ class ModelManager(object):
             name: str) -> Any:
         # TODO: Add this to documentation
         raise NotImplementedError()
+
+    # Sets a contactor in the model to open or closed at a given time if executeAt is not None, otherwise the
+    # contactor state is set immediately
+    def set_contactor(
+            self,
+            name: str,
+            swControl: bool,
+            swState: bool,
+            executeAt: Any=None):
+        if not hil.set_contactor(name= name, swControl=swControl, swState=swState, executeAt=executeAt):
+            raise RuntimeError(f"Failed to set contactor {name} to {swState}")

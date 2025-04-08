@@ -36,6 +36,18 @@ try:
 
   # Find available HIL devices
   hil_devices = automator.get_available_devices()
+
+  x = 0
+  popitem = -1
+  top = {}
+  for dev in hil_devices:
+    if dev['device_name'] == 'HiL-604-Top':
+      popitem = x
+    x += 1
+  if popitem != -1:
+    top = hil_devices.pop(popitem)
+  hil_devices = [top]
+
   use_vhil = False
 
   # Connect to HIL devices, or specify use of Virtual HIL
