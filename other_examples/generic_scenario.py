@@ -52,6 +52,7 @@ class GenericScenario(object):
     def flip_switch(simulation: typhoon_automator.Simulation, swControl: bool, swState: bool):
         extension = simulation._capture_filename.split(" Scenario")[0]
         fault = int(simulation._capture_filename.split("Fault ")[1])
+
         match int(fault):
             case 0: # No event
                 pass

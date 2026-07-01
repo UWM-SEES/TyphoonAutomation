@@ -34,7 +34,7 @@ DATA_LOG_PATH = "../output/data/"
 CAPTURE_PATH = "../output/capture/"
 
 RUNS = 1000
-capture_time = 1.0 / 60.0
+#capture_time = 1.0 / 60.0
 time = 13
 
 

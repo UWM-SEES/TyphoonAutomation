@@ -556,6 +556,9 @@ class Simulation(object):
             level: int = logging.DEBUG):
         self._automator.log(message, level = level)
 
+    def get_capture_name(self) -> str:
+        return self._capture_filename
+
     def set_contactor(
             self,
             name: str,

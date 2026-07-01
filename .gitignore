@@ -1,7 +1,7 @@
 # Ignore output and local folders
 [Oo]utput/
 [Ll]ocal/
-
+tsefiles/* Target files/
 # Ignore VS Code folder
 .vscode/
 
